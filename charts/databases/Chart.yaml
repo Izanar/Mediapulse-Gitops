@@ -1,0 +1,6 @@
+apiVersion: v2
+name: databases
+description: PostgreSQL and Redis for Mediapulse
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
