@@ -9,6 +9,9 @@ bootstrap: argocd-install
 	@echo "Applying root application..."
 	kubectl apply -f argocd/root.yaml
 
+argopassword:
+	@echo "ArgoCD initial password:"
+	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 # Принудительная синхронизация через CLI (если нужно без вебки)
 sync:
 	argocd app sync root-app
