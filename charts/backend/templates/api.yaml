@@ -24,6 +24,9 @@ spec:
           envFrom:
             - secretRef:
                 name: mediapulse-backend-secrets
+          env:
+            - name: WATCHFILES_FORCE_POLLING
+              value: "true" # Отключает агрессивный fsnotify, заменяя на безопасный опрос (polling)
 ---
 apiVersion: v1
 kind: Service
