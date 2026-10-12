@@ -12,15 +12,17 @@ spec:
       labels:
         app: mediapulse-api
     spec:
-      containers:
-        - name: api
-          image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
-          imagePullPolicy: Always
-          ports:
-            - containerPort: {{ .Values.api.port }}
-          envFrom:
-            - secretRef:
-                name: mediapulse-backend-secrets
+  imagePullSecrets:
+    - name: ghcr-secret
+  containers:
+    - name: api
+      image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
+      imagePullPolicy: Always
+      ports:
+        - containerPort: {{ .Values.api.port }}
+      envFrom:
+        - secretRef:
+            name: mediapulse-backend-secrets
 ---
 apiVersion: v1
 kind: Service
