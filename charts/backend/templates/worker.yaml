@@ -12,6 +12,7 @@ spec:
       labels:
         app: mediapulse-worker
     spec:
+      enableServiceLinks: false
       imagePullSecrets:
         - name: ghcr-secret
       containers:

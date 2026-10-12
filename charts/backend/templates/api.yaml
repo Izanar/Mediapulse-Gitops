@@ -12,6 +12,7 @@ spec:
       labels:
         app: mediapulse-api
     spec:
+      enableServiceLinks: false
       imagePullSecrets:
         - name: ghcr-secret
       containers:
