@@ -12,12 +12,12 @@ spec:
       labels:
         app: mediapulse-worker
     spec:
-  imagePullSecrets:
-    - name: ghcr-secret
-  containers:
-    - name: worker
-      image: "{{ .Values.worker.image }}:{{ .Values.worker.tag }}"
-      imagePullPolicy: Always
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: worker
+          image: "{{ .Values.worker.image }}:{{ .Values.worker.tag }}"
+          imagePullPolicy: Always
           envFrom:
             - secretRef:
                 name: mediapulse-backend-secrets

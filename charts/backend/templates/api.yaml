@@ -12,16 +12,16 @@ spec:
       labels:
         app: mediapulse-api
     spec:
-  imagePullSecrets:
-    - name: ghcr-secret
-  containers:
-    - name: api
-      image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
-      imagePullPolicy: Always
-      ports:
-        - containerPort: {{ .Values.api.port }}
-      envFrom:
-        - secretRef:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: api
+        image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
+        imagePullPolicy: Always
+        ports:
+          - containerPort: {{ .Values.api.port }}
+        envFrom:
+          - secretRef:
             name: mediapulse-backend-secrets
 ---
 apiVersion: v1
