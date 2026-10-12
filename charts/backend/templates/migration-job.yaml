@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mediapulse-migration
+  namespace: "{{ .Release.Namespace }}"
+  annotations:
+    # Самое главное: говорим Helm запустить эту задачу ПЕРЕД установкой или обновлением чарта
+    "helm.sh/hook": pre-install,pre-upgrade
+    # Говорим Kubernetes удалить старую задачу перед созданием новой, чтобы они не конфликтовали
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-migration
+          image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
+          # Команда, которая запускает миграции в твоем проекте (замени на свою, если она отличается)
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            - secretRef:
+                name: mediapulse-backend-secrets

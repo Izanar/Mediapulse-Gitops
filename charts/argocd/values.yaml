@@ -1,0 +1,29 @@
+configs:
+  cm:
+    kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
+
+repoServer:
+  # Монтируем секрет sops-age внутрь repo-server, чтобы ArgoCD видел age.key
+  volumes:
+    - name: sops-age
+      secret:
+        secretName: sops-age
+  volumeMounts:
+    - name: sops-age
+      mountPath: /helm-scripts/keys.txt
+      subPath: keys.txt
+  
+  # Указываем переменную окружения, где искать приватный ключ
+  env:
+    - name: SOPS_AGE_KEY_FILE
+      value: /helm-scripts/keys.txt
+      
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.local
+    extraAnnotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
