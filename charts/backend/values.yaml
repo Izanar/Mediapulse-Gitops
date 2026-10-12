@@ -1,11 +1,11 @@
 api:
-  image: ghcr.io/izanar/mediapulse/api
+  image: ghcr.io/izanar/mediapulse-app/api
   tag: latest
   replicas: 1
   port: 8000
 
 worker:
-  image: ghcr.io/izanar/mediapulse/worker
+  image: ghcr.io/izanar/mediapulse-app/worker
   tag: latest
   replicas: 1
 
