@@ -6,7 +6,7 @@
 [![GitOps](https://img.shields.io/badge/GitOps-ArgoCD-red?style=for-the-badge&logo=argo&logoColor=white)](https://argoproj.github.io/)
 [![Helm](https://img.shields.io/badge/Helm-Charts%20%7C%20v3-0F1689?style=for-the-badge&logo=helm&logoColor=white)](https://helm.sh/)
 [![Traefik](https://img.shields.io/badge/Traefik-Ingress%20Controller-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://doc.traefik.io/traefik/)
-[![License](https://img.shields.io/badge/License-MPPL%201.0-blue?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MPL%202.0-blue?style=for-the-badge)](LICENSE.md)
 
 </div>
 
