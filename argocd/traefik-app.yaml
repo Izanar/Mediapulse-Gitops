@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1" # Устанавливаем в первую очередь
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: traefik
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 29.1.0
+    helm:
+  values: |
+    # Проброс портов наружу (чтобы заходить с хоста через NodePort или hostPort)
+    ports:
+      web:
+        port: 80
+        hostPort: 80      # Пробрасывает 80 порт хоста прямо в подов Traefik
+        nodePort: 30080
+      websecure:
+        port: 443
+        hostPort: 443     # Пробрасывает 443 порт хоста
+        nodePort: 30443
+
+    # Настройки безопасности и логирования
+    providers:
+      kubernetesCRD:
+        enabled: true     # Обязательно: включает поддержку IngressRoute
+      kubernetesIngress:
+        enabled: true     # Поддержка стандартных Ingress ресурсов
+
+    # Метрики (полезно для мониторинга)
+    metrics:
+      prometheus:
+        enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
