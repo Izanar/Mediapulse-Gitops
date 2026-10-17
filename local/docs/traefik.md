@@ -8,27 +8,41 @@ Traefik работает как **Ingress Controller** и **обратный п�
 
 ## Где хранятся файлы
 
-| Компонент | Путь в репозитории |
-|-----------|-------------------|
-| ArgoCD Application | `local/argocd/traefik-app.yaml` |
-| Локальный Helm chart | `local/manifests/traefik/` |
-| CRD Traefik | `local/manifests/traefik/crds/` |
-| Шаблоны chart'а | `local/manifests/traefik/templates/` |
-| Значения по умолчанию | `local/manifests/traefik/values.yaml` |
+| Компонент | Путь в репозитории | Авторство |
+|-----------|-------------------|-----------|
+| ArgoCD Application | `local/argocd/traefik-app.yaml` | **Своё** (написано для проекта) |
+| Значения chart'а (overrides) | `traefik-app.yaml` секция `helm.values` | **Своё** (реплики, LoadBalancer IP, порты, провайдеры) |
+| Весь Helm chart Traefik | `local/manifests/traefik/` | **Скачано** (Traefik chart v42.0.0) |
+| CRD Traefik | `local/manifests/traefik/crds/` | **Скачано** (в составе chart'а) |
+| Шаблоны chart'а | `local/manifests/traefik/templates/` | **Скачано** (в составе chart'а) |
+| Значения по умолчанию chart'а | `local/manifests/traefik/values.yaml` | **Скачано** (в составе chart'а) |
+
+---
+
+## Почему Traefik — целый репозиторий (chart), а не 2 файла (в отличие от MetalLB)
+
+Traefik — это полноценный Ingress Controller с обширным Helm chart’ом: десятки шаблонов, CRD (IngressRoute, Middleware, ServersTransport и др.), значения по умолчанию, вспомогательные файлы. Собирать это вручную из отдельных YAML-файлов было бы нецелесообразно — легче скачать готовый chart целиком в `local/manifests/traefik/` и управлять им через ArgoCD как локальный Helm-источник.
+
+Наша собственная конфигурация Traefik минимальна и живет в `traefik-app.yaml` (секция `helm.values`):
+- `deployment.kind: Deployment` (не DaemonSet), `replicas: 4`
+- `service.type: LoadBalancer`, `loadBalancerIP: 172.18.255.10`, аннотация MetalLB pool
+- порты `web: 8000→80`, `websecure: 8443→443`
+- провайдеры `kubernetesCRD` + `kubernetesIngress`
+- метрики Prometheus
 
 ---
 
 ## Архитектура
 
-1. **Локальный chart** — весь Traefik chart 42.0.0 скачан и лежит в `local/manifests/traefik/`. Внешний Helm-репозиторий не нужен.
-2. **ArgoCD Application** — `traefik-app.yaml` ссылается на локальный chart через `path: local/manifests/traefik`.
+1. **Локальный chart** — весь Traefik chart 42.0.0 (**скачано**) лежит в `local/manifests/traefik/`. Внешний Helm-репозиторий не нужен.
+2. **ArgoCD Application** — `traefik-app.yaml` (**своё**) ссылается на локальный chart через `path: local/manifests/traefik` и передаёт собственные `helm.values`.
 3. **sync-wave: -1** — Traefik устанавливается после MetalLB (которая имеет `sync-wave: -2`).
-4. **LoadBalancer IP** — зафиксирован `loadBalancerIP: 172.18.255.10` в значениях chart'а.
-5. **Replicas** — 4 под Traefik для отказоустойчивости.
-6. **Тип развёртывания** — `Deployment` (не DaemonSet), без `hostPort`. Внешний трафик идёт через MetalLB.
+4. **LoadBalancer IP** — зафиксирован `loadBalancerIP: 172.18.255.10` (**своё**, в `traefik-app.yaml`).
+5. **Replicas** — 4 под Traefik для отказоустойчивости (**своё**, в `traefik-app.yaml`).
+6. **Тип развёртывания** — `Deployment` (не DaemonSet), без `hostPort`. Внешний трафик идёт через MetalLB (**своё**, в `traefik-app.yaml`).
 7. **Ports**:
-   - `web` → 8000 (exposed 80)
-   - `websecure` → 8443 (exposed 443)
+   - `web` → 8000 (exposed 80) (**своё**)
+   - `websecure` → 8443 (exposed 443) (**своё**)
 
 ---
 

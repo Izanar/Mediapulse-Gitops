@@ -8,23 +8,35 @@ MetalLB提供т **LoadBalancer** для кластеров, где нет обл
 
 ## Где хранятся файлы
 
-| Компонент | Путь в репозитории |
-|-----------|-------------------|
-| ArgoCD Application | `local/argocd/metallb-app.yaml` |
-| Native манифест MetalLB | `local/manifests/metallb/metallb-native.yaml` |
-| IPAddressPool | `local/manifests/metallb/ipaddresspool.yaml` |
+| Компонент | Путь в репозитории | Авторство |
+|-----------|-------------------|-----------|
+| ArgoCD Application | `local/argocd/metallb-app.yaml` | **Своё** (написано для проекта) |
+| Native манифест MetalLB | `local/manifests/metallb/metallb-native.yaml` | **Скачано** (официальный манифест MetalLB v0.14.5) |
+| IPAddressPool + L2Advertisement | `local/manifests/metallb/ipaddresspool.yaml` | **Своё** (написано для проекта) |
+
+---
+
+## Почему MetalLB — 2 файла, а не целый репозиторий (в отличие от Traefik)
+
+MetalLB поставляется как **один всевключающий манифест** (`metallb-native.yaml`, ~1900 строк), который содержит сразу всё: CRD, RBAC, ServiceAccount, Deployment контроллера, DaemonSet speaker. Этот файл скачан как есть — править его нет смысла, это upstream-артефакт.
+
+Наша конфигурация MetalLB минимальна и живет в отдельном файле `ipaddresspool.yaml`:
+- два `IPAddressPool` (фиксированный IP для Traefik + диапазон для остальных сервисов)
+- один `L2Advertisement` (режим L2/ARP для Kind)
+
+Traefik же — сложный Helm chart со множеством шаблонов, CRD, значений по умолчанию. Его проще скачать целиком и управлять через `values` в `traefik-app.yaml`, чем пытаться собрать вручную из отдельных YAML-файлов.
 
 ---
 
 ## Архитектура
 
-1. **Установка через манифест, не через Helm** — `metallb-native.yaml` (официальный манифест MetalLB v0.14.5, ~1900 строк) содержит все CRD, RBAC, Deployments controller и speaker.
-2. **ArgoCD Application** — `metallb-app.yaml` с `sync-wave: -2` (устанавливается **до** Traefik, которая имеет `sync-wave: -1`).
-3. **IPAddressPool** — два пула:
+1. **Установка через манифест, не через Helm** — `metallb-native.yaml` (официальный манифест MetalLB v0.14.5, **скачано**) содержит все CRD, RBAC, Deployment controller и speaker.
+2. **IPAddressPool + L2Advertisement** — `ipaddresspool.yaml` (**своё**) содержит:
    - `traefik-pool` — `172.18.255.10-172.18.255.10` (один фиксированный IP для Traefik)
    - `services-pool` — `172.18.255.11-172.18.255.250` (остальные сервисы)
-4. **L2Advertisement** — режим L2 (ARP), подходит для Kind/локальных кластеров без BGP.
-5. **Аннотация сервиса Traefik** — `metallb.universe.tf/address-pool: traefik-pool` связывает сервис с пулом.
+   - `L2Advertisement` — режим L2 (ARP), подходит для Kind/локальных кластеров без BGP.
+3. **ArgoCD Application** — `metallb-app.yaml` (**своё**) с `sync-wave: -2` (устанавливается **до** Traefik, которая имеет `sync-wave: -1`).
+4. **Аннотация сервиса Traefik** — `metallb.universe.tf/address-pool: traefik-pool` (**своё**, в `traefik-app.yaml`) связывает сервис с пулом.
 
 ---
 
