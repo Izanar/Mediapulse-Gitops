@@ -1,25 +1,23 @@
-server:
-  ingress:
-    enabled: true
-    annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.tls: "true"
-    hosts:
-      - host: argocd.local
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - hosts:
-          - argocd.local
-        secretName: argocd-tls
-
-configs:
-  params:
-    server.insecure: true
-  cm:
+# Значения для сабчарта argo-cd (ключ обязан совпадать с именем зависимости в Chart.yaml)
+argo-cd:
+  server:
+    # Upstream-ingress отключён — маршрутизацию делает собственный IngressRoute (templates/ingress.yaml).
+    # Insecure-режим argocd-server включается через configs.params.server.insecure (см. ниже),
+    # Traefik завершает TLS на entryPoint websecure, внутри — HTTP.
+    ingress:
+      enabled: false
+  configs:
     params:
       server.insecure: true
-  rbac:
-    policy: |
-      g, admins, role:admin
+    cm:
+      params:
+        server.insecure: true
+    rbac:
+      policy: |
+        g, admins, role:admin
+
+# Собственные ресурсы обёртки (шаблоны templates/)
+ingress:
+  enabled: true
+  host: argocd.local
+  entryPoint: websecure

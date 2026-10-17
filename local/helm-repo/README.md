@@ -3,7 +3,7 @@
 Здесь хранятся упакованные Helm-чарты проекта:
 - `backend` — API и Worker Mediapulse
 - `databases` — PostgreSQL и Redis
-- `argocd` — локальная обёртка над upstream-чартом `argo/argo-cd` (значения проекта)
+- `argocd` — локальная обёртка над upstream-чартом `argo/argo-cd` (значения проекта + Traefik IngressRoute)
 
 ## Подключение репозитория
 
@@ -21,10 +21,8 @@ helm install mediapulse-backend mediapulse/backend -n default
 # Базы данных
 helm install mediapulse-databases mediapulse/databases -n default
 
-# Argo CD (через обёртку со значениями проекта)
+# Argo CD (обёртка со значениями проекта + IngressRoute)
 helm install argocd mediapulse/argocd -n argocd
-# или напрямую из upstream:
-helm upgrade --install argocd argo/argo-cd -n argocd -f charts/argocd/values.yaml
 ```
 
 ## Сборка репозитория локально
@@ -37,7 +35,7 @@ helm package charts/argocd --destination helm-repo/
 helm repo index helm-repo --url https://izanar.github.io/Mediapulse-Gitops
 ```
 
-Чарт `argocd` является обёрткой (umbrella) над `argo/argo-cd`. При установке через этот чарт убедитесь, что подключён репозиторий `https://argoproj.github.io/argo-helm`, либо выполните `helm dependency build charts/argocd` перед упаковкой.
+Чарт `argocd` является обёрткой (umbrella) над `argo/argo-cd`. Upstream-зависимость запакована внутрь чарта (`charts/argo-cd-7.0.0.tgz`), поэтому для установки не нужен доступ к `https://argoproj.github.io/argo-helm`. При обновлении версии зависимости выполните `helm dependency build charts/argocd` перед упаковкой.
 
 ## Связь с Argo CD
 

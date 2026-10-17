@@ -1,8 +1,8 @@
 apiVersion: v2
 name: argocd
-description: Argo CD — declarative continuous delivery for Kubernetes. Локальная обёртка над upstream-чартом argo/argo-cd со значениями проекта.
+description: "Argo CD - declarative continuous delivery for Kubernetes. Локальная обёртка над upstream-чартом argo/argo-cd: значения проекта + Traefik IngressRoute для argocd.local."
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "2.10.0"
 dependencies:
   - name: argo-cd
