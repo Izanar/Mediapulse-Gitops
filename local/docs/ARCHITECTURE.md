@@ -35,7 +35,7 @@ sync-wave:  0   → kubernetes-dashboard (Веб-UI кластера)
 | IngressRoute Traefik UI | `local/manifests/traefik/templates/traefik-dashboard-ingress.yaml` | **Своё** | — | Traefik IngressRoute для traefik.local |
 | IngressRoute K8s Dashboard | `local/manifests/kubernetes-dashboard/k8s-dashboard-ingress.yaml` | **Своё** | — | Traefik IngressRoute + ServersTransport для k8s.local |
 | IngressRoute backend | `local/charts/backend/templates/ingress.yaml` | **Своё** | — | Traefik IngressRoute для mediapulse.local |
-| Helm-чарты | `local/charts/` | **Своё** | — | Чарты backend, databases, argocd; применяются из git (Argo CD) и локально (`make argocd-up`), без отдельного реестра |
+| Helm-чарты | `local/charts/` | **Своё** | — | Чарты backend, databases, argocd; применяются из git (Argo CD) и локально (`make argocd-up`), без реестра; копия публикуется в [Izanar/helm-charts](https://github.com/Izanar/helm-charts) (GitHub Pages) для внешних потребителей |
 
 ---
 
