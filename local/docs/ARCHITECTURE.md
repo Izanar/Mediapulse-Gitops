@@ -31,7 +31,12 @@ sync-wave:  0   → kubernetes-dashboard (Веб-UI кластера)
 | Databases chart | `local/charts/databases/` | **Своё** | — | Собственный Helm chart БД |
 | Makefile | `Mediapulse-Infra/local/Makefile` | **Своё** | — | Автоматизация кластера (Kind, Helm, ArgoCD) |
 | dev-dashboard.sh | `Mediapulse-Infra/local/dev-dashboard.sh` | **Своё** | — | Настройка Ingress-маршрутов и вывод учетных данных |
-| Ingress-маршруты | `Mediapulse-Infra/local/routes/*.yaml` | **Своё** | — | Traefik IngressRoute для ArgoCD, Dashboard, Traefik UI, backend |
+| ArgoCD обёртка + values | `local/charts/argocd/` | **Своё** | — | Chart.yaml + values.yaml для установки argo/argo-cd через Helm |
+| IngressRoute ArgoCD | `local/argocd/argocd-ingress.yaml` | **Своё** | — | Traefik IngressRoute + ServersTransport для argocd.local |
+| IngressRoute Traefik UI | `local/manifests/traefik/templates/traefik-dashboard-ingress.yaml` | **Своё** | — | Traefik IngressRoute для traefik.local |
+| IngressRoute K8s Dashboard | `local/manifests/kubernetes-dashboard/k8s-dashboard-ingress.yaml` | **Своё** | — | Traefik IngressRoute + ServersTransport для k8s.local |
+| IngressRoute backend | `local/charts/backend/templates/ingress.yaml` | **Своё** | — | Traefik IngressRoute для mediapulse.local |
+| Helm-репозиторий | `local/helm-repo/` | **Своё** | — | Упакованные чарт'ы backend, databases, argocd + index.yaml |
 
 ---
 
@@ -70,3 +75,67 @@ Traefik — сложный Ingress Controller с огромным количес
 | K8s Dashboard | `docs/kubernetes-dashboard.md` |
 | Backend | *(в разработке)* |
 | Databases | *(в разработке)* |
+
+---
+
+## Bootstrap: как устанавливается Argo CD
+
+Argo CD устанавливается **императивно** — через Helm CLI до того, как сам появится в кластере. Это решает проблему «курица и яйцо»: Argo CD не может установить себя stesso через собственный Application, потому что для этого он уже должен быть запущен.
+
+Цепочка запуска (`Mediapulse-Infra/local/Makefile`):
+
+1. `make cluster-up` — создаёт Kind-кластер.
+2. `make argocd-up` — ставит Argo CD через Helm:
+   ```bash
+   helm upgrade --install argocd argo/argo-cd --namespace argocd \
+     -f charts/argocd/values.yaml
+   ```
+   Файл `charts/argocd/values.yaml` содержит переопределения: Ingress для `argocd.local`, `server.insecure: true`, RBAC для группы `admins`.
+3. `kubectl apply -f local/argocd/root.yaml` — создаёт `root-app` (App-of-Apps), который забирает все остальные Application из папки `local/argocd/`.
+
+После этого Argo CD сам управляет всем остальным (MetalLB, Traefik, backend, databases, kubernetes-dashboard, ingress-маршруты).
+
+**В продакшене** установка самого Argo CD обычно делается один раз извне (Helm, Argo CD Operator, или официальные манифесты), а затем через Argo CD Application может управляться его собственная конфигурация (с осторожностью — чтобы не удалить самого себя по ошибке).
+
+---
+
+## Распределение Ingress-маршрутов
+
+Каждый `IngressRoute` Traefik лежит в папке своего компонента и управляется соответствующим Argo CD Application:
+
+| Маршрут | Путь | Управляет Application |
+|---------|------|----------------------|
+| `argocd.local` → `argocd-server` | `local/argocd/argocd-ingress.yaml` | `root-app` (как обычный манифест) |
+| `traefik.local/dashboard` | `local/manifests/traefik/templates/traefik-dashboard-ingress.yaml` | `traefik-app` (через Helm chart) |
+| `k8s.local` → `kubernetes-dashboard` | `local/manifests/kubernetes-dashboard/k8s-dashboard-ingress.yaml` | `kubernetes-dashboard-app` |
+| `mediapulse.local` → `mediapulse-api-service` | `local/charts/backend/templates/ingress.yaml` | `backend-app` (через Helm chart) |
+
+Таким образом, отдельный Application для всех IngressRoute не нужен — каждый компонент отвечает за свой маршрут.
+
+---
+
+## Helm-репозиторий проекта
+
+Упакованные чарт'ы проекта хранятся в `local/helm-repo/`:
+
+- `backend-0.1.0.tgz` — собственный чарт API и Worker
+- `databases-0.1.0.tgz` — собственный чарт PostgreSQL + Redis
+- `argocd-0.1.0.tgz` — обёртка над `argo/argo-cd` со значениями проекта
+- `index.yaml` — индекс репозитория
+
+**Подключение:**
+```bash
+helm repo add mediapulse https://izanar.github.io/Mediapulse-Gitops
+helm repo update
+```
+
+**Установка:**
+```bash
+helm install mediapulse-backend mediapulse/backend -n default
+helm install mediapulse-databases mediapulse/databases -n default
+helm install argocd mediapulse/argocd -n argocd
+```
+
+**Публикация:** содержимое `local/helm-repo/` автоматически выкладывается на GitHub Pages через workflow `.github/workflows/helm-pages.yml` (при пуше в `main`, затрагивающем `local/helm-repo/`). Сайт: https://izanar.github.io/Mediapulse-Gitops
+
+**Важно:** Argo CD Application'ы в этом репозитории ссылаются на локальные пути Git (`path: local/charts/backend` и т.д.), а не на удалённый Helm-репозиторий. Helm-репозиторий нужен для распространения чартов в другие окружения или через CI/CD.

@@ -1,0 +1,41 @@
+apiVersion: v1
+entries:
+  argocd:
+  - apiVersion: v2
+    appVersion: 2.10.0
+    created: "2026-10-17T18:27:57.436740528Z"
+    dependencies:
+    - name: argo-cd
+      repository: https://argoproj.github.io/argo-helm
+      version: 7.0.0
+    description: Argo CD — declarative continuous delivery for Kubernetes. Локальная
+      обёртка над upstream-чартом argo/argo-cd со значениями проекта.
+    digest: d8a8f92a5a9111833365a1ce5dedf2453e6f39463de18f9adfed883d9623d0fd
+    name: argocd
+    type: application
+    urls:
+    - https://izanar.github.io/Mediapulse-Gitops/argocd-0.1.0.tgz
+    version: 0.1.0
+  backend:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-10-17T18:27:57.436929069Z"
+    description: Mediapulse API and Worker from GHCR
+    digest: f1130939d3307a941f3c16508da2e99f34df8d0c29b6f486de7c5307120a808d
+    name: backend
+    type: application
+    urls:
+    - https://izanar.github.io/Mediapulse-Gitops/backend-0.1.0.tgz
+    version: 0.1.0
+  databases:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-10-17T18:27:57.437032306Z"
+    description: PostgreSQL and Redis for Mediapulse
+    digest: eb4dbc6199cbf18a4eb386e3087139cc6f23e162e3d54e82125afa7957bb1de7
+    name: databases
+    type: application
+    urls:
+    - https://izanar.github.io/Mediapulse-Gitops/databases-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-10-17T18:27:57.426089948Z"

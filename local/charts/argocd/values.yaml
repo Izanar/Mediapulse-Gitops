@@ -1,0 +1,25 @@
+server:
+  ingress:
+    enabled: true
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    hosts:
+      - host: argocd.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - argocd.local
+        secretName: argocd-tls
+
+configs:
+  params:
+    server.insecure: true
+  cm:
+    params:
+      server.insecure: true
+  rbac:
+    policy: |
+      g, admins, role:admin
