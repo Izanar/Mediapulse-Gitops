@@ -4,6 +4,7 @@ metadata:
   name: mediapulse-migration
   namespace: "{{ .Release.Namespace }}"
 spec:
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       restartPolicy: OnFailure
