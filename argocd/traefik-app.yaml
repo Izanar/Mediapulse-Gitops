@@ -15,12 +15,11 @@ spec:
     targetRevision: 42.0.0
     helm:
       values: |
-        # Traefik теперь Deployment (не DaemonSet), без hostPort.
-        # Внешний трафик идёт через LoadBalancer (MetalLB) или NodePort.
-        daemonSet:
-          enabled: false
-
+        # Traefik как Deployment (не DaemonSet), без hostPort.
+        # Внешний трафик идёт через LoadBalancer (MetalLB).
         deployment:
+          enabled: true
+          kind: Deployment
           replicas: 3
           affinity:
             podAntiAffinity:
@@ -34,16 +33,23 @@ spec:
 
         # Сервис типа LoadBalancer — забор трафика забирает MetalLB (локальный LB)
         service:
-          type: LoadBalancer
           enabled: true
           annotations:
             metallb.universe.tf/address-pool: traefik-pool
+          spec:
+            type: LoadBalancer
 
         ports:
           web:
             port: 80
+            expose:
+              default: true
+            exposedPort: 80
           websecure:
             port: 443
+            expose:
+              default: true
+            exposedPort: 443
 
         # Настройки безопасности и логирования
         providers:
