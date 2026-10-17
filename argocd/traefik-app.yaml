@@ -38,6 +38,7 @@ spec:
             metallb.universe.tf/address-pool: traefik-pool
           spec:
             type: LoadBalancer
+            loadBalancerIP: 172.18.255.10
 
         ports:
           web:
