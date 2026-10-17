@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mediapulse-backend
+  name: mediapulse-databases
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git'
     targetRevision: HEAD
-    path: charts/backend
+    path: local/charts/databases
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: default

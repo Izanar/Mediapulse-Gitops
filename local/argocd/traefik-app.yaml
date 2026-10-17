@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git'
     targetRevision: HEAD
-    path: manifests/traefik
+    path: local/manifests/traefik
     helm:
       values: |
         # Traefik как Deployment (не DaemonSet), без hostPort.
