@@ -35,7 +35,7 @@ sync-wave:  0   → kubernetes-dashboard (Веб-UI кластера)
 | IngressRoute Traefik UI | `local/manifests/traefik/templates/traefik-dashboard-ingress.yaml` | **Своё** | — | Traefik IngressRoute для traefik.local |
 | IngressRoute K8s Dashboard | `local/manifests/kubernetes-dashboard/k8s-dashboard-ingress.yaml` | **Своё** | — | Traefik IngressRoute + ServersTransport для k8s.local |
 | IngressRoute backend | `local/charts/backend/templates/ingress.yaml` | **Своё** | — | Traefik IngressRoute для mediapulse.local |
-| Helm-репозиторий (OCI/GHCR) | `local/charts/` + [`.github/workflows/helm-oci.yml`](../.github/workflows/helm-oci.yml) | **Своё** | — | Публикация чартов backend, databases, argocd в `oci://ghcr.io/izanar/mediapulse-charts` |
+| Helm-чарты | `local/charts/` | **Своё** | — | Чарты backend, databases, argocd; применяются из git (Argo CD) и локально (`make argocd-up`), без отдельного реестра |
 
 ---
 
@@ -112,19 +112,13 @@ Argo CD устанавливается **императивно** — через
 
 ---
 
-## Helm-репозиторий проекта
+## Helm-чарты проекта
 
-Упакованные чарт'ы проекта хранятся в `local/charts/` (исходники) и публикуются в **OCI-реестр GHCR** — `oci://ghcr.io/izanar/mediapulse-charts`. Подробная документация по чартам и публикации — в [`local/charts/README.md`](../charts/README.md).
+Чарты хранятся в `local/charts/` в исходном виде и применяются **напрямую из git** — отдельный Helm-репозиторий/реестр не используется (git единственный источник правды). Подробности — в [`local/charts/README.md`](../charts/README.md).
 
-**Установка:**
-```bash
-helm install argocd oci://ghcr.io/izanar/mediapulse-charts/argocd --version 0.2.0 -n argocd
-helm install mediapulse-backend oci://ghcr.io/izanar/mediapulse-charts/backend --version 0.1.0 -n default
-helm install mediapulse-databases oci://ghcr.io/izanar/mediapulse-charts/databases --version 0.1.0 -n default
-```
+- `argocd/` — обёртка над `argo/argo-cd` (значения проекта + Traefik IngressRoute); ставится локально: `helm upgrade --install argocd ../../Mediapulse-Gitops/local/charts/argocd -n argocd` (делает `make argocd-up` в Mediapulse-Infra)
+- `backend/`, `databases/` — Argo CD разворачивает из тех же путей git (Application'ы в `local/argocd/`, `path: local/charts/...`)
 
-**Публикация:** workflow `.github/workflows/helm-oci.yml` при пуше в `main` (с изменениями в `local/charts/**`) запаковывает каждый чарт (`helm package`) и пушит в реестр (`helm push oci://…`). Теги OCI-реестра иммутабельны: любое изменение чарта требует bump-а версии в его `Chart.yaml`.
-
-**ArtifactHub:** [artifacthub.io](https://artifacthub.io) — каталог Helm-чартов, не хостинг: он индексирует реальный репозиторий (в нашем случае OCI-реестр GHCR) и ссылается на него. Репозиторий регистрируется в UI ArtifactHub с типом «Helm charts (OCI registry)» и URL `oci://ghcr.io/izanar/mediapulse-charts`; ownership claim публикуется файлом `artifacthub-repo.yml` с тегом `artifacthub.io`.
+Публикация чартов в OCI-реестры/Pages/ArtifactHub не ведётся: внешних потребителей чартов нет — все установки идут из этого git-репозитория.
 
 **Важно:** Argo CD Application'ы в этом репозитории ссылаются на локальные пути Git (`path: local/charts/backend` и т.д.), а не на удалённый Helm-репозиторий. Helm-репозиторий нужен для распространения чартов в другие окружения или через CI/CD.
