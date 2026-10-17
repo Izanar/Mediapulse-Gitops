@@ -136,4 +136,6 @@ helm install argocd mediapulse/argocd -n argocd
 
 **Публикация:** содержимое `local/helm-repo/` автоматически выкладывается на GitHub Pages через workflow `.github/workflows/helm-pages.yml` (при пуше в `main`, затрагивающем `local/helm-repo/`). Сайт: https://izanar.github.io/Mediapulse-Gitops
 
+**Как появились `.tgz`:** это результат локальной упаковки каталогов из `local/charts/` — `helm package charts/<имя> --destination helm-repo/` кладёт содержимое чарта (Chart.yaml, values.yaml, templates/, charts/) в tar.gz, после чего `helm repo index` (пере)генерирует `index.yaml` со ссылками и sha256-digest'ами. GitHub Pages отдаёт эту папку как обычный HTTP-сервер — этим и является helm-репозиторий. Подробный разбор (внутренняя структура архива, digest, порядок действий при изменении чарта) — в [`local/helm-repo/README.md`](../helm-repo/README.md).
+
 **Важно:** Argo CD Application'ы в этом репозитории ссылаются на локальные пути Git (`path: local/charts/backend` и т.д.), а не на удалённый Helm-репозиторий. Helm-репозиторий нужен для распространения чартов в другие окружения или через CI/CD.
