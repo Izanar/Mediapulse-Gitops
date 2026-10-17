@@ -13,56 +13,6 @@ spec:
     repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git'
     targetRevision: HEAD
     path: local/manifests/traefik
-    helm:
-      values: |
-        # Traefik как Deployment (не DaemonSet), без hostPort.
-        # Внешний трафик идёт через LoadBalancer (MetalLB).
-        deployment:
-          enabled: true
-          kind: Deployment
-          replicas: 4
-          affinity:
-            podAntiAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 100
-                  podAffinityTerm:
-                    labelSelector:
-                      matchLabels:
-                        app.kubernetes.io/instance: traefik
-                    topologyKey: kubernetes.io/hostname
-
-        # Сервис типа LoadBalancer — забор трафика забирает MetalLB (локальный LB)
-        service:
-          enabled: true
-          annotations:
-            metallb.universe.tf/address-pool: traefik-pool
-          spec:
-            type: LoadBalancer
-            loadBalancerIP: 172.18.255.10
-
-        ports:
-          web:
-            port: 8000
-            expose:
-              default: true
-            exposedPort: 80
-          websecure:
-            port: 8443
-            expose:
-              default: true
-            exposedPort: 443
-
-        # Настройки безопасности и логирования
-        providers:
-          kubernetesCRD:
-            enabled: true     # Обязательно: включает поддержку IngressRoute
-          kubernetesIngress:
-            enabled: true     # Поддержка стандартных Ingress ресурсов
-
-        # Метрики (полезно для мониторинга)
-        metrics:
-          prometheus:
-            enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik

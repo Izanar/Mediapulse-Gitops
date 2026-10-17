@@ -1,0 +1,13 @@
+dashboard:
+  image: kubernetesui/dashboard:v2.7.0
+  replicas: 1
+
+service:
+  port: 443
+  targetPort: 8443
+
+# Домен из docs/kubernetes-dashboard.md — https://k8s.local:8443/
+host: k8s.local
+
+# ServiceAccount для входа по токену (kubectl -n kubernetes-dashboard create token admin-user)
+adminUser: admin-user

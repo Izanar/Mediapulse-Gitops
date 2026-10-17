@@ -1,21 +1,25 @@
 # Чарты проекта Mediapulse
 
-Исходники Helm-чартов:
+Исходники Helm-чартов компонентов приложения:
 
 - `backend/` — API и Worker Mediapulse
 - `databases/` — PostgreSQL + Redis
-- `argocd/` — обёртка над upstream-чартом `argo/argo-cd` (значения проекта + Traefik IngressRoute)
+
+Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами (сейчас: `kubernetes-dashboard/` — веб-UI кластера, `k8s.local` через Traefik, вход по токену `admin-user`).
+
+Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория, в нашем git лежит только файл values (`local/manifests/argocd/values.yaml` — переопределения + IngressRoute через `extraObjects`).
 
 ## Как чарты попадают в кластер
 
 **Git — единственный источник правды.** Кластерные установки идут только из этого репозитория:
 
 1. **Argo CD (основной путь).** Application'ы в `local/argocd/` ссылаются на пути в этом репозитории (`path: local/charts/backend` и т.д.). При пуше изменений чарта Argo CD сам перерендеривает шаблоны из git-чекаута и синкает — никакого helm-реестра в цепочке нет.
-2. **Локальная установка (bootstrap).** Чарт `argocd` ставится напрямую с диска, без сети и реестров:
+2. **Локальная установка Argo CD (bootstrap).** Argo CD ставится напрямую из официального Helm-репозитория с нашим файлом values:
    ```bash
-   helm upgrade --install argocd ../../Mediapulse-Gitops/local/charts/argocd -n argocd
+   helm upgrade --install argocd argo-cd --repo https://argoproj.github.io/argo-helm --version 7.0.0 \
+     --namespace argocd --values ../../Mediapulse-Gitops/local/manifests/argocd/values.yaml
    ```
-   (это делает `make argocd-up` в Mediapulse-Infra). Upstream-чарт argo-cd запакован внутрь обёртки, поэтому установка офлайн-совместима.
+   (это делает `make argocd-up` в Mediapulse-Infra). Нужен доступ в сеть к `argoproj.github.io`.
 
 Дополнительно существует **публикуемая копия** чартов в отдельном репозитории [Izanar/helm-charts](https://github.com/Izanar/helm-charts) — для внешних потребителей (см. «Публикация чартов» ниже). На кластерные установки она не влияет.
 
@@ -23,14 +27,34 @@
 
 ```bash
 # 1. правка templates/ или values.yaml
-# 2. опционально: bump версии в Chart.yaml (для Argo CD не влияет,
-#    но обязателен для публикации в helm-charts — см. ниже)
+# 2. bump версии НЕ делаем вручную — его сделает CI (см. ниже)
 # 3. проверка и публикация в git
 helm template test local/charts/<имя>          # локальный рендер
 git add -A && git commit -m "chart(<имя>): ..." && git push
 ```
 
-Для чарта `argocd` (bootstrap) после пуша повторите `make argocd-up` в Mediapulse-Infra — Argo CD ещё не управляет собственной установкой.
+## CI: версионирование чартов (`.github/workflows/charts.yml`)
+
+Версионируются **только чарты приложения** в `local/charts/*` (backend, databases).
+Инфра в `local/manifests/*` и чужие upstream-чарты здесь не трогаем.
+
+| Триггер | Что делает CI |
+|---------|---------------|
+| Push в `main` с изменениями в `local/charts/**` | `helm lint` + `helm template` всех чартов → сверка образа приложения с GHCR (см. ниже) → patch-bump **только изменённым** чартам → `helm package` (проверка сборки) → коммит бампа |
+| Каждые 30 минут (`schedule`) | Опрос GHCR: если `:latest` образа `api` указывает на новый sha — patch-bump чарта `backend` + `appVersion`/`api.tag`/`worker.tag` = новый тег → коммит |
+
+Версия приложения (`appVersion`, теги образов) забирается **самим Gitops из GHCR без PAT**:
+workflow логинится в `ghcr.io` штатным `GITHUB_TOKEN` (`packages: read`), тянет
+`ghcr.io/izanar/mediapulse-app/api:latest`, читает label
+`org.opencontainers.image.revision` (его ставит `docker/metadata-action` в App CI)
+и вычисляет тег `sha-<7 символов>`. Условие: репозиторию Mediapulse-Gitops открыт
+Actions-доступ к пакетам `api`/`worker` (страница пакета → Package settings →
+Manage Actions access → Add repository) либо пакеты публичные.
+Чарт `databases` от образов приложения не зависит — его версия растёт только при правке его самого (образы postgres/redis пиним вручную).
+
+Ручной запуск: Actions → «Charts» → Run workflow (бампнет изменённые чарты).
+
+Для values `argocd` (bootstrap, лежит в `local/manifests/argocd/values.yaml`) после пуша повторите `make argocd-up` в Mediapulse-Infra — Argo CD ещё не управляет собственной установкой.
 
 Если чарт должен уйти и во внешнюю публикацию — скопируйте его в `Izanar/helm-charts` (см. README там):
 
@@ -38,19 +62,6 @@ git add -A && git commit -m "chart(<имя>): ..." && git push
 cp -a local/charts/<имя> ../helm-charts/charts/
 cd ../helm-charts && git add charts/<имя> && git commit -m "release: <имя> <версия>" && git push
 ```
-
-## Справочно: внутренний вид чарта
-
-`helm package local/charts/argocd` собирает каталог чарта в tar.gz с префиксом `имя-версия`. Внутри `argocd-0.2.0.tgz`:
-
-```
-argocd/Chart.yaml              <- манифест обёртки (name: argocd, version: 0.2.0)
-argocd/values.yaml             <- значения, включая ключ argo-cd.* для субчарта
-argocd/templates/ingress.yaml  <- собственный шаблон IngressRoute
-argocd/charts/argo-cd/...      <- upstream-чарт argo-cd 7.0.0, запакованный внутрь
-```
-
-Благодаря каталогу `charts/` внутри пакета `helm install` ничего не качает с `argoproj.github.io` — весь argo-cd уже внутри. При обновлении зависимости: `helm dependency update local/charts/argocd`.
 
 ## Публикация чартов (отдельный репозиторий)
 
