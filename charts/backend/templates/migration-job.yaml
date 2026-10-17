@@ -3,11 +3,6 @@ kind: Job
 metadata:
   name: mediapulse-migration
   namespace: "{{ .Release.Namespace }}"
-  annotations:
-    # Самое главное: говорим Helm запустить эту задачу ПЕРЕД установкой или обновлением чарта
-    "helm.sh/hook": pre-install,pre-upgrade
-    # Говорим Kubernetes удалить старую задачу перед созданием новой, чтобы они не конфликтовали
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
     spec:

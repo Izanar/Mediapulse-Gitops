@@ -119,3 +119,33 @@ Mediapulse-Gitops/
 Все значения (образы, реплики, креды БД, ключи S3/R2) задаются в
 `charts/*/values.yaml`. После правки достаточно сделать `git push` — ArgoCD
 подтянет изменения сам (`targetRevision: HEAD`, `automated`).
+
+## ⚠️ Секреты и конфиденциальные данные
+
+В файле `charts/backend/values.yaml` сейчас указаны **примерные/заглушечные**
+значения паролей и ключей (parallely к `.env.example`):
+
+```yaml
+database:
+  password: mediapulse_secret   # ← заменить перед запуском в прод
+storage:
+  secretAccessKey: "..."        # ← заменить перед запуском в прод
+```
+
+**Не коммитьте реальные секреты в Git.** Порядок действий перед развёртыванием
+в production:
+
+1. Склонируйте репозиторий.
+2. Отредактируйте `charts/backend/values.yaml`, вставив настоящие значения из
+   вашего секрет-хранилища (HashiCorp Vault, AWS Secrets Manager, Yandex Lockbox и т.д.).
+3. Либо передайте их при установке через `--set` / отдельный `values.prod.yaml`:
+   ```bash
+   helm upgrade --install backend charts/backend \
+     --set database.password=$(vault read -field=password secret/mediapulse/db) \
+     --set storage.secretAccessKey=$(vault read -field=key secret/mediapulse/s3)
+   ```
+4. Сделайте `git push` только с несекретными изменениями. Файл с реальными
+   паролями не должен попадать в коммит.
+
+Для локального Kind-окружения примерные значения из `values.yaml` подходят —
+достаточно для разработки и тестирования.
