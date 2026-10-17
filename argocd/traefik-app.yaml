@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   source:
-    chart: traefik
-    repoURL: https://traefik.github.io/charts
-    targetRevision: 42.0.0
+    repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git'
+    targetRevision: HEAD
+    path: manifests/traefik
     helm:
       values: |
         # Traefik как Deployment (не DaemonSet), без hostPort.
