@@ -7,7 +7,7 @@
 
 Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами (сейчас: `kubernetes-dashboard/` — веб-UI кластера, `k8s.local` через Traefik, вход по токену `admin-user`).
 
-Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория, в нашем git лежит только файл values (`local/manifests/argocd/values.yaml` — переопределения + IngressRoute через `extraObjects`).
+Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже.
 
 ## Как чарты попадают в кластер
 

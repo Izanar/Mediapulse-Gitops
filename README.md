@@ -23,15 +23,17 @@
 
 ```
 Mediapulse-Infra            Mediapulse-Gitops (этот репо)
-  make all-up                 make bootstrap
-  ├─ Kind cluster       ──▶    └─ argocd/root.yaml  (root-app, App of Apps)
-  ├─ ingress-nginx              └─ argocd/
-  └─ ArgoCD (Helm)                 ├─ backend-app.yaml   ──▶ charts/backend  (api, worker, migration)
-                                   └─ databases-app.yaml ──▶ charts/databases (postgres, redis)
+  make all-up                 ArgoCD Applications
+  ├─ Kind cluster       ──▶    ├─ MetalLB → Traefik
+  ├─ ArgoCD (Helm)             ├─ databases → backend
+  └─ dashboard setup           ├─ Kubernetes Dashboard
+                               └─ argocd/root.yaml (root-app adopts these Applications)
 ```
 
-`root-app` следит за папкой `argocd/` и автоматически создаёт `backend-app` и
-`databases-app` (`automated.prune` + `selfHeal` — правки в git применяются сами).
+`root-app` следит за папкой `argocd/` и управляет Application-манифестами
+инфраструктуры и Mediapulse. `make all-up` сначала разворачивает приложения
+по зависимостям, затем применяет `root-app`, чтобы он принял эти Application
+под управление (`automated.prune` + `selfHeal`).
 
 ## Требования
 
@@ -49,7 +51,7 @@ Mediapulse-Infra            Mediapulse-Gitops (этот репо)
 
 ```bash
 cd ../Mediapulse-Infra/local
-make all-up        # кластер + ingress-nginx + ArgoCD
+make all-up        # кластер + MetalLB + Traefik + ArgoCD + приложения
 ```
 
 ### 2. Зарегистрировать приложения Mediapulse в ArgoCD
@@ -59,7 +61,7 @@ cd Mediapulse-Gitops
 make bootstrap     # применяет argocd/root.yaml (App of Apps)
 ```
 
-ArgoCD подхватит `root-app` и автоматически развернёт `backend` и `databases`.
+Argo CD подхватит `root-app` и будет автоматически синхронизировать приложения.
 Отслеживать синхронизацию можно в UI (`https://argocd.local`) или так:
 
 ```bash
@@ -78,14 +80,15 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 | Сервис              | URL                          |
 | ------------------- | ---------------------------- |
-| ArgoCD UI           | `https://argocd.local`       |
-| Mediapulse backend  | `https://mediapulse.local`   |
+| ArgoCD UI           | `https://argocd.local:8443/` |
+| Mediapulse backend  | `https://mediapulse.local:8443/` |
 
-В `/etc/hosts` должны быть строки (для локального Kind — IP = `127.0.0.1`):
+Для доступа из Windows через WSL2 запустите `make traefik-port-forward` в
+репозитории `Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит
+`make all-up`:
 
 ```
-127.0.0.1 argocd.local
-127.0.0.1 mediapulse.local
+<WSL2_IP> argocd.local traefik.local k8s.local mediapulse.local
 ```
 
 ## Команды Makefile
