@@ -48,7 +48,7 @@ jobs:
             helm lint "$chart"
           done
           # Короткие инфра-чарты (только lint+render, версии не трогаем).
-          for chart in local/manifests/traefik local/manifests/kubernetes-dashboard; do
+          for chart in local/manifests/traefik local/manifests/kubernetes-dashboard local/manifests/certificates; do
             if [ -f "$chart/Chart.yaml" ]; then
               echo "==> helm lint $(basename "$chart") (manifests)"
               helm lint "$chart"

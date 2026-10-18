@@ -11,4 +11,5 @@ spec:
       services:
         - name: api@internal
           kind: TraefikService
-  tls: {}
+  tls:
+    secretName: traefik-local-tls

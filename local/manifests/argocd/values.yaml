@@ -30,6 +30,10 @@ extraObjects:
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
         traefik.ingress.kubernetes.io/router.tls: "true"
     spec:
+      tls:
+        - hosts:
+            - argocd.local
+          secretName: argocd-local-tls
       rules:
         - host: argocd.local
           http:

@@ -1,0 +1,95 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-local-tls
+  namespace: argocd
+spec:
+  secretName: argocd-local-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: mediapulse-local-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - argocd.local
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mediapulse-local-tls
+  namespace: default
+spec:
+  secretName: mediapulse-local-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: mediapulse-local-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - mediapulse.local
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-local-tls
+  namespace: traefik
+spec:
+  secretName: traefik-local-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: mediapulse-local-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - traefik.local
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: k8s-local-tls
+  namespace: kubernetes-dashboard
+spec:
+  secretName: k8s-local-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: mediapulse-local-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - k8s.local
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubernetes-dashboard-internal-tls
+  namespace: kubernetes-dashboard
+spec:
+  secretName: kubernetes-dashboard-internal-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: mediapulse-local-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - kubernetes-dashboard.kubernetes-dashboard.svc
+    - kubernetes-dashboard.kubernetes-dashboard.svc.cluster.local
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth

@@ -93,6 +93,14 @@ UI обслуживается контейнером API. Hostname `mediapulse.l
 `mediapulse-app`; его манифест находится в
 [`local/argocd/mediapulse-app.yaml`](./local/argocd/mediapulse-app.yaml).
 
+Для локальных имён `.local` используется внутренний CA: публичные CA, включая
+Let's Encrypt, не выдают сертификаты для этого домена. `make all-up` устанавливает
+cert-manager и выпускает отдельные сертификаты для UI, Argo CD, Traefik и
+Kubernetes Dashboard; Dashboard также получает сертификат для HTTPS между
+Traefik и его Kubernetes Service. Чтобы браузеры доверяли HTTPS без предупреждений,
+добавьте файл `~/.config/mediapulse/pki/ca.crt` из WSL в хранилище доверенных
+корневых сертификатов клиентской ОС/браузера. Приватный ключ CA не хранится в Git.
+
 Для доступа из Windows через WSL2 запустите `make all-up` в репозитории
 `Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит `make all-up`:
 

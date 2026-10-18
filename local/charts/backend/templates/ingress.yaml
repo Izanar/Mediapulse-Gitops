@@ -27,4 +27,5 @@ spec:
       services:
         - name: mediapulse-api-service
           port: 80
-  tls: {}
+  tls:
+    secretName: mediapulse-local-tls

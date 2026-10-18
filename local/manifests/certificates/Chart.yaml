@@ -1,0 +1,5 @@
+apiVersion: v2
+name: certificates
+description: Local CA and TLS certificates for the Mediapulse Kind cluster
+type: application
+version: 0.1.0
