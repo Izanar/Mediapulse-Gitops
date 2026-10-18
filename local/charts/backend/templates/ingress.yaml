@@ -12,3 +12,19 @@ spec:
       services:
         - name: mediapulse-api-service
           port: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: mediapulse-ingress-https
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`mediapulse.local`)
+      kind: Rule
+      services:
+        - name: mediapulse-api-service
+          port: 80
+  tls: {}

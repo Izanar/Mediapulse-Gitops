@@ -7,7 +7,7 @@
 
 Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами (сейчас: `kubernetes-dashboard/` — веб-UI кластера, `k8s.local` через Traefik, вход по токену `admin-user`). Чарт Dashboard также создаёт требуемые им секреты `certs`, `csrf` и `key-holder`.
 
-Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже.
+Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже, включает TLS на Traefik и публикует внешний URL Argo CD `https://argocd.local:8443`.
 
 MetalLB создаётся до Traefik. Его `IPAddressPool` и `L2Advertisement` помечены
 Argo CD sync-wave `1`, чтобы сначала установились CRD, webhook и controller,

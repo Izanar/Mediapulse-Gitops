@@ -64,7 +64,7 @@ make bootstrap     # применяет argocd/root.yaml (App of Apps)
 ```
 
 Argo CD подхватит `root-app` и будет автоматически синхронизировать приложения.
-Отслеживать синхронизацию можно в UI (`https://argocd.local`) или так:
+Отслеживать синхронизацию можно в UI (`https://argocd.local:8443/`) или так:
 
 ```bash
 kubectl -n argocd get applications

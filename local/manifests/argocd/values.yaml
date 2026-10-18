@@ -10,11 +10,10 @@ server:
     enabled: false
 
 configs:
+  cm:
+    url: https://argocd.local:8443
   params:
     server.insecure: true
-  cm:
-    params:
-      server.insecure: true
   rbac:
     policy: |
       g, admins, role:admin
@@ -29,6 +28,7 @@ extraObjects:
       namespace: {{ .Release.Namespace }}
       annotations:
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/router.tls: "true"
     spec:
       rules:
         - host: argocd.local

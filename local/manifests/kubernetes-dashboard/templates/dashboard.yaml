@@ -18,9 +18,15 @@ spec:
           image: "{{ .Values.dashboard.image }}"
           ports:
             - containerPort: {{ .Values.service.targetPort }}
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
           args:
             - --auto-generate-certificates
             - --namespace={{ .Release.Namespace }}
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
