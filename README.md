@@ -30,9 +30,11 @@ Mediapulse-Infra            Mediapulse-Gitops (этот репо)
                                └─ argocd/root.yaml (root-app adopts these Applications)
 ```
 
-`root-app` следит за папкой `argocd/` и управляет Application-манифестами
-инфраструктуры и Mediapulse. `make all-up` сначала разворачивает приложения
-по зависимостям, затем применяет `root-app`, чтобы он принял эти Application
+`root-app` следит за Application-манифестами в папке `argocd/` и управляет
+инфраструктурой и приложениями Mediapulse. Собственный манифест `root.yaml`
+исключён из отслеживаемых ресурсов, чтобы Argo CD не пытался создавать и
+удалять самого себя. `make all-up` сначала разворачивает приложения по
+зависимостям, затем применяет `root-app`, чтобы он принял эти Application
 под управление (`automated.prune` + `selfHeal`).
 
 ## Требования

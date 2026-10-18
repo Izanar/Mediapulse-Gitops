@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: root-app
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -11,6 +13,8 @@ spec:
     repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git' # Замените на URL вашего репозитория
     targetRevision: HEAD
     path: local/argocd # Указывает на папку, где лежат backend-app.yaml и databases-app.yaml
+    directory:
+      exclude: root.yaml
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
