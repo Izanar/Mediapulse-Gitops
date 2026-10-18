@@ -26,8 +26,9 @@ spec:
               readOnly: true
           args:
             - --namespace={{ .Release.Namespace }}
-            - --tls-cert-file=/tls/tls.crt
-            - --tls-key-file=/tls/tls.key
+            - --default-cert-dir=/tls
+            - --tls-cert-file=tls.crt
+            - --tls-key-file=tls.key
       volumes:
         - name: tmp-volume
           emptyDir: {}
