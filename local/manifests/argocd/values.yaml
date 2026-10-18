@@ -11,7 +11,7 @@ server:
 
 configs:
   cm:
-    url: https://argocd.local:8443
+    url: https://argocd.local
   params:
     server.insecure: true
   rbac:

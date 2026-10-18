@@ -64,7 +64,7 @@ make bootstrap     # применяет argocd/root.yaml (App of Apps)
 ```
 
 Argo CD подхватит `root-app` и будет автоматически синхронизировать приложения.
-Отслеживать синхронизацию можно в UI (`https://argocd.local:8443/`) или так:
+Отслеживать синхронизацию можно в UI (`https://argocd.local/`) или так:
 
 ```bash
 kubectl -n argocd get applications
@@ -82,20 +82,19 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 | Сервис              | URL                          |
 | ------------------- | ---------------------------- |
-| ArgoCD UI           | `https://argocd.local:8443/` |
-| Mediapulse app (UI/API) | `https://mediapulse.local:8443/` |
+| ArgoCD UI           | `https://argocd.local/` |
+| Mediapulse app (UI/API) | `https://mediapulse.local/` |
 
 UI обслуживается контейнером API. Hostname `mediapulse.local` задан в
 [`local/charts/backend/values.yaml`](./local/charts/backend/values.yaml) и
 используется Traefik для маршрутизации HTTP/HTTPS. Имя должно разрешаться на
-адрес, ведущий к Traefik: при port-forward это `127.0.0.1` в WSL или IP WSL2
-в Windows (см. инструкцию ниже). В Argo CD приложение зарегистрировано как
+адрес, ведущий на порт 443 интерфейса, опубликованного для Traefik (в WSL2
+это IP WSL2). В Argo CD приложение зарегистрировано как
 `mediapulse-app`; его манифест находится в
 [`local/argocd/mediapulse-app.yaml`](./local/argocd/mediapulse-app.yaml).
 
-Для доступа из Windows через WSL2 запустите `make traefik-port-forward` в
-репозитории `Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит
-`make all-up`:
+Для доступа из Windows через WSL2 запустите `make all-up` в репозитории
+`Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит `make all-up`:
 
 ```
 <WSL2_IP> argocd.local traefik.local k8s.local mediapulse.local
