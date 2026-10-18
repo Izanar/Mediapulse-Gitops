@@ -83,7 +83,11 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 | Сервис              | URL                          |
 | ------------------- | ---------------------------- |
 | ArgoCD UI           | `https://argocd.local:8443/` |
-| Mediapulse backend  | `https://mediapulse.local:8443/` |
+| Mediapulse app (UI/API) | `https://mediapulse.local:8443/` |
+
+UI обслуживается контейнером API. В Argo CD приложение зарегистрировано как
+`mediapulse-backend`; его манифест находится в
+[`local/argocd/backend-app.yaml`](./local/argocd/backend-app.yaml).
 
 Для доступа из Windows через WSL2 запустите `make traefik-port-forward` в
 репозитории `Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит

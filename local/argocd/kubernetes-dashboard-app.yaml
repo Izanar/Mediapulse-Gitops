@@ -14,9 +14,23 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: kubernetes-dashboard
+  ignoreDifferences:
+    - group: ''
+      kind: ConfigMap
+      name: kubernetes-dashboard-settings
+      namespace: kubernetes-dashboard
+      jsonPointers:
+        - /data
+    - group: ''
+      kind: Secret
+      name: kubernetes-dashboard-csrf
+      namespace: kubernetes-dashboard
+      jsonPointers:
+        - /data
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
