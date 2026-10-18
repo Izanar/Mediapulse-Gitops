@@ -85,9 +85,13 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 | ArgoCD UI           | `https://argocd.local:8443/` |
 | Mediapulse app (UI/API) | `https://mediapulse.local:8443/` |
 
-UI обслуживается контейнером API. В Argo CD приложение зарегистрировано как
-`mediapulse-backend`; его манифест находится в
-[`local/argocd/backend-app.yaml`](./local/argocd/backend-app.yaml).
+UI обслуживается контейнером API. Hostname `mediapulse.local` задан в
+[`local/charts/backend/values.yaml`](./local/charts/backend/values.yaml) и
+используется Traefik для маршрутизации HTTP/HTTPS. Имя должно разрешаться на
+адрес, ведущий к Traefik: при port-forward это `127.0.0.1` в WSL или IP WSL2
+в Windows (см. инструкцию ниже). В Argo CD приложение зарегистрировано как
+`mediapulse-app`; его манифест находится в
+[`local/argocd/mediapulse-app.yaml`](./local/argocd/mediapulse-app.yaml).
 
 Для доступа из Windows через WSL2 запустите `make traefik-port-forward` в
 репозитории `Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит
@@ -114,7 +118,7 @@ Mediapulse-Gitops/
 ├── Makefile                     # цели bootstrap/sync/status/clean
 ├── argocd/                      # ArgoCD Application-манифесты
 │   ├── root.yaml                #   App of Apps (следит за этой папкой)
-│   ├── backend-app.yaml         #   -> charts/backend
+│   ├── mediapulse-app.yaml      #   -> charts/backend
 │   └── databases-app.yaml       #   -> charts/databases
 └── charts/
     ├── backend/                 # API + Worker + миграции Alembic

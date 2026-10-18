@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: Host(`mediapulse.local`)
+    - match: Host(`{{ .Values.host }}`)
       kind: Rule
       services:
         - name: mediapulse-api-service
@@ -22,7 +22,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`mediapulse.local`)
+    - match: Host(`{{ .Values.host }}`)
       kind: Rule
       services:
         - name: mediapulse-api-service
