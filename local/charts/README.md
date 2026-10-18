@@ -5,7 +5,7 @@
 - `backend/` — API и Worker Mediapulse
 - `databases/` — PostgreSQL + Redis
 
-Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами (сейчас: `kubernetes-dashboard/` — веб-UI кластера, `k8s.local` через Traefik, вход по токену `admin-user`).
+Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами (сейчас: `kubernetes-dashboard/` — веб-UI кластера, `k8s.local` через Traefik, вход по токену `admin-user`). Чарт Dashboard также создаёт требуемые им секреты `certs`, `csrf` и `key-holder`.
 
 Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже.
 
