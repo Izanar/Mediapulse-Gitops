@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: local-ca-creator
+  namespace: cert-manager
+spec:
+  template:
+    spec:
+      serviceAccountName: local-ca-creator
+      restartPolicy: OnFailure
+      containers:
+      - name: ca-creator
+        image: alpine:3.19
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            apk add --no-cache openssl
+            cp /scripts/generate-ca.sh /tmp/generate-ca.sh
+            chmod +x /tmp/generate-ca.sh
+            /tmp/generate-ca.sh
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+      volumes:
+      - name: script
+        configMap:
+          name: local-ca-script
