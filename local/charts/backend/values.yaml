@@ -16,7 +16,6 @@ database:
   host: postgres
   port: 5432
   user: mediapulse
-  password: mediapulse_secret
   db: mediapulse
 
 redis:
@@ -26,5 +25,3 @@ redis:
 storage:
   endpoint: "https://158b52dcae768c7b229bb581dfec81b5.r2.cloudflarestorage.com"
   bucketName: "media-originals"
-  accessKeyId: "95d0a66db0e9e18c678d8b3a85fdaf22"
-  secretAccessKey: "5aa9cf9e7f2104d3be3b1d14e779cb41fc4c4d700e873e5b1cab3ee1b794b5c8"
