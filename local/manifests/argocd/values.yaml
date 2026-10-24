@@ -3,9 +3,7 @@
 # Без локальной обёртки: версия пинится флагом --version в Makefile.
 
 server:
-  # Traefik обрабатывает стандартный Kubernetes Ingress; CRD Traefik устанавливаются позже.
-  # Insecure-режим argocd-server включается через configs.params.server.insecure,
-  # Traefik завершает TLS на entryPoint websecure, внутри — HTTP.
+  # TLS завершается на Cloudflare; внутри Tunnel и кластера используется HTTP.
   ingress:
     enabled: false
 
@@ -27,13 +25,8 @@ extraObjects:
       name: argocd-server-ingress
       namespace: {{ .Release.Namespace }}
       annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
-        traefik.ingress.kubernetes.io/router.tls: "true"
+        traefik.ingress.kubernetes.io/router.entrypoints: web
     spec:
-      tls:
-        - hosts:
-            - argocd.izanar.dev
-          secretName: argocd-izanar-dev-tls
       rules:
         - host: argocd.izanar.dev
           http:

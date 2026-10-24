@@ -44,14 +44,11 @@ spec:
               containerPort: {{ .Values.ports.traefik }}
             - name: web
               containerPort: {{ .Values.ports.web }}
-            - name: websecure
-              containerPort: {{ .Values.ports.websecure }}
             - name: metrics
               containerPort: {{ .Values.ports.metrics }}
           args:
             - --entrypoints.traefik.address=:{{ .Values.ports.traefik }}/tcp
             - --entrypoints.web.address=:{{ .Values.ports.web }}/tcp
-            - --entrypoints.websecure.address=:{{ .Values.ports.websecure }}/tcp
             - --entrypoints.metrics.address=:{{ .Values.ports.metrics }}/tcp
             - --providers.kubernetescrd
             - --providers.kubernetesingress
@@ -97,6 +94,3 @@ spec:
     - name: web
       port: {{ .Values.servicePorts.web }}
       targetPort: web
-    - name: websecure
-      port: {{ .Values.servicePorts.websecure }}
-      targetPort: websecure

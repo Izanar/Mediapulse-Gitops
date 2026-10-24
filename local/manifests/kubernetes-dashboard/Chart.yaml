@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kubernetes-dashboard
-description: Kubernetes Dashboard for local Kind cluster (kind.izanar.dev via Traefik)
+description: Kubernetes Dashboard for local Kind cluster (kind.izanar.dev via Cloudflare Tunnel)
 type: application
 version: 0.1.0
 appVersion: "2.7.0"

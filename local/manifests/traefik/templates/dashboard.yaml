@@ -4,12 +4,10 @@ metadata:
   name: traefik-dashboard
 spec:
   entryPoints:
-    - websecure
+    - web
   routes:
     - match: Host(`{{ .Values.host }}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
       kind: Rule
       services:
         - name: api@internal
           kind: TraefikService
-  tls:
-    secretName: traefik-izanar-dev-tls

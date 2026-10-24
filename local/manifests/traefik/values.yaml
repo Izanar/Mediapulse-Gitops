@@ -1,11 +1,10 @@
 image: traefik:v3.7.14
 replicas: 4
 
-# Порты пода (entryPoints): traefik 8080 (api+ping), web 8000, websecure 8443, metrics 9100
+# Порты пода (entryPoints): traefik 8080 (api+ping), web 8000, metrics 9100
 ports:
   traefik: 8080
   web: 8000
-  websecure: 8443
   metrics: 9100
 
 # Внешний IP через MetalLB (пул traefik-pool из manifests/metallb)
@@ -14,7 +13,6 @@ loadBalancerIP: 172.18.255.10
 # Домен дашборда через Cloudflare Tunnel — https://traefik.izanar.dev/dashboard/
 host: traefik.izanar.dev
 
-# Внешние порты сервиса (exposedPort официального чарта): web 80, websecure 443
+# Внешний HTTP origin для Cloudflare Tunnel.
 servicePorts:
   web: 80
-  websecure: 443

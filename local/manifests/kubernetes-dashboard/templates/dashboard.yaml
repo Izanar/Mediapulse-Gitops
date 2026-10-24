@@ -21,20 +21,13 @@ spec:
           volumeMounts:
             - name: tmp-volume
               mountPath: /tmp
-            - name: serving-certificate
-              mountPath: /tls
-              readOnly: true
           args:
             - --namespace={{ .Release.Namespace }}
-            - --default-cert-dir=/tls
-            - --tls-cert-file=tls.crt
-            - --tls-key-file=tls.key
+            - --default-cert-dir=/tmp
+            - --auto-generate-certificates
       volumes:
         - name: tmp-volume
           emptyDir: {}
-        - name: serving-certificate
-          secret:
-            secretName: kubernetes-dashboard-internal-tls
 ---
 apiVersion: v1
 kind: Service

@@ -90,21 +90,23 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 UI обслуживается контейнером API. Hostname `mediapulse.izanar.dev` задан в
 [`local/charts/backend/values.yaml`](./local/charts/backend/values.yaml) и
-используется Traefik для маршрутизации HTTP/HTTPS. Имя должно разрешаться на
-адрес Cloudflare Tunnel. В Argo CD приложение зарегистрировано как
+используется Traefik для маршрутизации запросов от Cloudflare Tunnel. Имя
+должно разрешаться на адрес Cloudflare Tunnel. В Argo CD приложение зарегистрировано как
 `mediapulse-app`; его манифест находится в
 [`local/argocd/mediapulse-app.yaml`](./local/argocd/mediapulse-app.yaml).
 
 `make all-up` запускает локальный Cloudflare Tunnel connector после готовности
-приложений. В Cloudflare Dashboard должны быть предварительно созданы Published
-application routes на `https://localhost:443`; для origin необходимо отключить
-TLS verification, поскольку внутренние TLS-сертификаты подписаны локальным CA.
-Cloudflare выдаёт публичный TLS посетителям.
+приложений. В Cloudflare Dashboard для Published application routes укажите
+origin `http://172.18.255.10:80` (IP Traefik из
+[`local/manifests/traefik/values.yaml`](./local/manifests/traefik/values.yaml)).
+Cloudflare Tunnel устанавливает исходящее соединение с Cloudflare, а сам кластер
+не открывает публичные порты. Публичный HTTPS завершается на Cloudflare; внутри
+локального Docker/Kind origin используется HTTP. Настраивать локальный CA и
+доверенные сертификаты на компьютерах больше не требуется.
 
 Обязательно защитите hostname Argo CD, Kubernetes Dashboard и Traefik Dashboard
 Cloudflare Access policy, разрешающей только доверенный email. Tunnel сам по себе
-не предоставляет авторизацию. Локальный CA и его ключ остаются вне Git; CA нужен
-только для TLS между origin proxy и приложениями внутри Kind.
+не предоставляет авторизацию.
 
 ## Команды Makefile
 

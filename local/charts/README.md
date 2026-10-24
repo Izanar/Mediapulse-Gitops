@@ -8,7 +8,7 @@
 
 Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами. Kubernetes Dashboard доступен по `kind.izanar.dev` через Traefik и Cloudflare Tunnel; перед публикацией hostname должен быть защищён Cloudflare Access, а сам Dashboard дополнительно требует токен `admin-user`. Чарт Dashboard также создаёт требуемые им секреты `certs`, `csrf` и `key-holder`.
 
-Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже, включает TLS на Traefik и публикует внешний URL Argo CD `https://argocd.izanar.dev`, защищённый Cloudflare Access.
+Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже, использует HTTP внутри кластера; публичный URL Argo CD `https://argocd.izanar.dev` защищён Cloudflare Access и HTTPS завершается на Cloudflare.
 
 MetalLB создаётся до Traefik. Его `IPAddressPool` и `L2Advertisement` помечены
 Argo CD sync-wave `1`, чтобы сначала установились CRD, webhook и controller,
