@@ -37,6 +37,16 @@ helm template test local/charts/<имя>          # локальный ренд�
 git add -A && git commit -m "chart(<имя>): ..." && git push
 ```
 
+### Пароль PostgreSQL
+
+Helm берёт значения `.Values.*` из `values.yaml` чарта и из переопределений,
+переданных при установке. В базе имя пользователя, пароль и имя БД не задаются
+в `values.yaml`: Deployment получает их из Kubernetes Secret
+`mediapulse-backend-secrets`, который создаёт External Secrets Operator из Vault.
+Для локального кластера заполните Vault из `Mediapulse-App/.env` скриптом
+`Mediapulse-Infra/local/init-local-secrets.sh`. Пока Secret не создан, pod
+PostgreSQL не запустится; после появления Secret Kubernetes повторит запуск.
+
 ## CI: версионирование чартов (`.github/workflows/charts.yml`)
 
 Версионируются **только чарты приложения** в `local/charts/*` (backend, databases).

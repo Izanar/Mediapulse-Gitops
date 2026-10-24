@@ -1,8 +1,6 @@
 postgres:
   image: postgres:15-alpine
-  user: mediapulse
-  password: mediapulse_secret
-  db: mediapulse
+  existingSecret: mediapulse-backend-secrets
 
 redis:
   image: redis:7-alpine
