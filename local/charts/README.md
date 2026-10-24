@@ -10,9 +10,11 @@
 
 Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже, использует HTTP внутри кластера; публичный URL Argo CD `https://argocd.izanar.dev` защищён Cloudflare Access и HTTPS завершается на Cloudflare.
 
-MetalLB создаётся до Traefik. Его `IPAddressPool` и `L2Advertisement` помечены
-Argo CD sync-wave `1`, чтобы сначала установились CRD, webhook и controller,
-и только после готовности webhook применялись пользовательские ресурсы.
+Traefik публикуется только как внутренний `ClusterIP` Service. Pod
+`cloudflared` работает в том же Kubernetes-кластере и направляет трафик на
+`traefik.traefik.svc.cluster.local:80`; внешний LoadBalancer или NodePort не
+используется. Connector token поступает из Vault через External Secrets
+Operator и хранится в Kubernetes Secret только для монтирования в Pod Tunnel.
 
 ## Как чарты попадают в кластер
 

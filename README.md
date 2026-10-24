@@ -24,9 +24,10 @@
 ```
 Mediapulse-Infra            Mediapulse-Gitops (этот репо)
   make all-up                 ArgoCD Applications
-  ├─ Kind cluster       ──▶    ├─ MetalLB → Traefik
+  ├─ Kind cluster       ──▶    ├─ Traefik (ClusterIP) → приложения
   ├─ ArgoCD (Helm)             ├─ databases → backend
-  └─ dashboard setup           ├─ Kubernetes Dashboard
+  └─ dashboard setup           ├─ cloudflared → Traefik
+                               ├─ Kubernetes Dashboard
                                └─ argocd/root.yaml (root-app adopts these Applications)
 ```
 
@@ -53,7 +54,7 @@ Mediapulse-Infra            Mediapulse-Gitops (этот репо)
 
 ```bash
 cd ../Mediapulse-Infra/local
-make all-up        # кластер + MetalLB + Traefik + ArgoCD + приложения
+make all-up        # кластер + Traefik + ArgoCD + приложения + Cloudflare Tunnel
 ```
 
 ### 2. Зарегистрировать приложения Mediapulse в ArgoCD
@@ -95,14 +96,18 @@ UI обслуживается контейнером API. Hostname `mediapulse.i
 `mediapulse-app`; его манифест находится в
 [`local/argocd/mediapulse-app.yaml`](./local/argocd/mediapulse-app.yaml).
 
-`make all-up` запускает локальный Cloudflare Tunnel connector после готовности
-приложений. В Cloudflare Dashboard для Published application routes укажите
-origin `http://172.18.255.10:80` (IP Traefik из
-[`local/manifests/traefik/values.yaml`](./local/manifests/traefik/values.yaml)).
-Cloudflare Tunnel устанавливает исходящее соединение с Cloudflare, а сам кластер
-не открывает публичные порты. Публичный HTTPS завершается на Cloudflare; внутри
-локального Docker/Kind origin используется HTTP. Настраивать локальный CA и
-доверенные сертификаты на компьютерах больше не требуется.
+`make all-up` запускает Cloudflare Tunnel connector как Pod внутри Kubernetes.
+Для каждого Published application route в Cloudflare Dashboard укажите origin
+`http://traefik.traefik.svc.cluster.local:80`. Connector обращается к Traefik
+через внутренний ClusterIP service; MetalLB, NodePort и входящие порты на хосте
+не нужны. Публичный HTTPS завершается на Cloudflare, локальный CA и доверенные
+сертификаты на компьютерах не требуются.
+
+Connector token задаётся в локальном `Mediapulse-App/.env`. Скрипт
+`init-local-secrets.sh` сохраняет его вместе с остальными значениями в Vault,
+а External Secrets Operator создаёт Kubernetes Secret, смонтированный только
+в Pod Cloudflare Tunnel. Token не коммитится в Git; временный root-токен Vault
+отзывается после bootstrap.
 
 Обязательно защитите hostname Argo CD, Kubernetes Dashboard и Traefik Dashboard
 Cloudflare Access policy, разрешающей только доверенный email. Tunnel сам по себе

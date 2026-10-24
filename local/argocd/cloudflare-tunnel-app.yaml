@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: metallb
+  name: cloudflare-tunnel
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-2" # Устанавливаем ДО Traefik
+    argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -12,13 +12,13 @@ spec:
   source:
     repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git'
     targetRevision: HEAD
-    path: local/manifests/metallb
+    path: local/manifests/cloudflare-tunnel
   destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: metallb-system
+    server: https://kubernetes.default.svc
+    namespace: default
   syncPolicy:
     automated:
-      prune: true
       selfHeal: true
+      prune: true
     syncOptions:
       - CreateNamespace=true

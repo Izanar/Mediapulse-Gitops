@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-tunnel
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cloudflare-tunnel
+  template:
+    metadata:
+      labels:
+        app: cloudflare-tunnel
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:2026.10.3
+          args:
+            - tunnel
+            - --no-autoupdate
+            - run
+            - --token-file
+            - /run/secrets/cloudflare/tunnel-token
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: tunnel-token
+              mountPath: /run/secrets/cloudflare
+              readOnly: true
+      volumes:
+        - name: tunnel-token
+          secret:
+            secretName: cloudflare-tunnel-token
+            defaultMode: 0444
+            items:
+              - key: tunnel-token
+                path: tunnel-token
