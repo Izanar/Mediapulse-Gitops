@@ -44,10 +44,12 @@ Helm берёт значения `.Values.*` из `values.yaml` чарта и и
 переданных при установке. В базе имя пользователя, пароль и имя БД не задаются
 в `values.yaml`: Deployment получает их из Kubernetes Secret
 `mediapulse-backend-secrets`, который создаёт отдельный чарт `secrets/` через
-External Secrets Operator из Vault. Для локального кластера сначала заполните
-Vault из `Mediapulse-App/.env` скриптом
-`Mediapulse-Infra/local/init-local-secrets.sh`, затем дождитесь готовности
-ExternalSecret и только после этого запускайте базу данных.
+External Secrets Operator из Vault. Для локального кластера `make all-up`
+автоматически инициализирует одноузловый Vault Raft, разблокирует его ключом
+из `~/.config/mediapulse/vault/`, загружает значения из `Mediapulse-App/.env`
+и создаёт секрет до запуска базы. Root-токен не сохраняется и отзывается
+после первоначальной настройки. Bootstrap-файлы локальные — не удаляйте их,
+пока используется PVC Vault.
 
 ## CI: версионирование чартов (`.github/workflows/charts.yml`)
 

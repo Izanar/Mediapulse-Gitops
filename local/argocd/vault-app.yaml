@@ -13,7 +13,16 @@ spec:
       values: |
         server:
           dev:
+            enabled: false
+          dataStorage:
             enabled: true
+            size: 1Gi
+          ha:
+            enabled: true
+            replicas: 1
+            raft:
+              enabled: true
+              setNodeId: true
           ui:
             enabled: true
   destination:
