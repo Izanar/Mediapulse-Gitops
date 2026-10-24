@@ -28,9 +28,20 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc' 
     namespace: vault 
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: vault-agent-injector-cfg
+      jqPathExpressions:
+        - '.webhooks[] | select(.name == "vault.hashicorp.com") | .clientConfig.caBundle'
+        - '.webhooks[] | select(.name == "vault.hashicorp.com") | .clientConfig.service.port'
+        - '.webhooks[] | select(.name == "vault.hashicorp.com") | .namespaceSelector'
+        - '.webhooks[] | select(.name == "vault.hashicorp.com") | .reinvocationPolicy'
+        - '.webhooks[] | select(.name == "vault.hashicorp.com") | .rules[] | .scope'
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
