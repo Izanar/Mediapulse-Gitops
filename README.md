@@ -16,8 +16,9 @@
 
 > ⚠️ **Сам ArgoCD здесь НЕ устанавливается.** ArgoCD, Traefik и кластер
 > разворачиваются в репозитории [`Mediapulse-Infra`](../Mediapulse-Infra)
-> (`make all-up`). Этот репозиторий только добавляет поверх ArgoCD приложения
-> Mediapulse.
+> (`make all-up`). Этот репозиторий содержит желаемое состояние приложений
+> Kubernetes; `root-app`, установленный Infra, регистрирует и синхронизирует
+> их, включая инфраструктурные компоненты, приложения MediaPulse и их зависимости.
 
 ## Архитектура
 
@@ -117,11 +118,11 @@ Cloudflare Access policy, разрешающей только доверенны
 
 | Команда             | Что делает                                                        |
 | ------------------- | ----------------------------------------------------------------- |
-| `make bootstrap`    | Применяет `argocd/root.yaml` (App of Apps) — регистрирует backend и databases |
+| `make bootstrap`    | Применяет `argocd/root.yaml` (App of Apps) — регистрирует все Applications из `local/argocd/` |
 | `make argopassword` | Печатает начальный пароль `admin` ArgoCD                          |
 | `make sync`         | Принудительная синхронизация `root-app` (нужен ArgoCD CLI)        |
 | `make status`       | Список приложений ArgoCD (нужен ArgoCD CLI)                       |
-| `make clean`        | Удаляет `root-app` (каскадом уберёт backend и databases). Namespace `argocd` остаётся |
+| `make clean`        | Удаляет `root-app` и каскадно удаляет дочерние Applications и управляемые ими ресурсы. Namespace `argocd` остаётся; ресурсы, не управляемые дочерними Applications, и созданные ими namespaces могут сохраниться |
 
 ## Структура репозитория
 
