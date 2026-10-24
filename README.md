@@ -64,7 +64,8 @@ make bootstrap     # применяет argocd/root.yaml (App of Apps)
 ```
 
 Argo CD подхватит `root-app` и будет автоматически синхронизировать приложения.
-Отслеживать синхронизацию можно в UI (`https://argocd.local/`) или так:
+Отслеживать синхронизацию можно в UI (`https://argocd.izanar.dev/`, через
+Cloudflare Access) или так:
 
 ```bash
 kubectl -n argocd get applications
@@ -82,31 +83,28 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 | Сервис              | URL                          |
 | ------------------- | ---------------------------- |
-| ArgoCD UI           | `https://argocd.local/` |
-| Mediapulse app (UI/API) | `https://mediapulse.local/` |
+| ArgoCD UI           | `https://argocd.izanar.dev/` (Cloudflare Access) |
+| Mediapulse app (UI/API) | `https://mediapulse.izanar.dev/` |
+| Traefik Dashboard    | `https://traefik.izanar.dev/dashboard/` (Cloudflare Access) |
+| Kubernetes Dashboard | `https://kind.izanar.dev/` (Cloudflare Access) |
 
-UI обслуживается контейнером API. Hostname `mediapulse.local` задан в
+UI обслуживается контейнером API. Hostname `mediapulse.izanar.dev` задан в
 [`local/charts/backend/values.yaml`](./local/charts/backend/values.yaml) и
 используется Traefik для маршрутизации HTTP/HTTPS. Имя должно разрешаться на
-адрес, ведущий на порт 443 интерфейса, опубликованного для Traefik (в WSL2
-это IP WSL2). В Argo CD приложение зарегистрировано как
+адрес Cloudflare Tunnel. В Argo CD приложение зарегистрировано как
 `mediapulse-app`; его манифест находится в
 [`local/argocd/mediapulse-app.yaml`](./local/argocd/mediapulse-app.yaml).
 
-Для локальных имён `.local` используется внутренний CA: публичные CA, включая
-Let's Encrypt, не выдают сертификаты для этого домена. `make all-up` устанавливает
-cert-manager и выпускает отдельные сертификаты для UI, Argo CD, Traefik и
-Kubernetes Dashboard; Dashboard также получает сертификат для HTTPS между
-Traefik и его Kubernetes Service. Чтобы браузеры доверяли HTTPS без предупреждений,
-добавьте файл `~/.config/mediapulse/pki/ca.crt` из WSL в хранилище доверенных
-корневых сертификатов клиентской ОС/браузера. Приватный ключ CA не хранится в Git.
+`make all-up` запускает локальный Cloudflare Tunnel connector после готовности
+приложений. В Cloudflare Dashboard должны быть предварительно созданы Published
+application routes на `https://localhost:443`; для origin необходимо отключить
+TLS verification, поскольку внутренние TLS-сертификаты подписаны локальным CA.
+Cloudflare выдаёт публичный TLS посетителям.
 
-Для доступа из Windows через WSL2 запустите `make all-up` в репозитории
-`Mediapulse-Infra` и добавьте в `hosts` IP WSL2, который выводит `make all-up`:
-
-```
-<WSL2_IP> argocd.local traefik.local k8s.local mediapulse.local
-```
+Обязательно защитите hostname Argo CD, Kubernetes Dashboard и Traefik Dashboard
+Cloudflare Access policy, разрешающей только доверенный email. Tunnel сам по себе
+не предоставляет авторизацию. Локальный CA и его ключ остаются вне Git; CA нужен
+только для TLS между origin proxy и приложениями внутри Kind.
 
 ## Команды Makefile
 

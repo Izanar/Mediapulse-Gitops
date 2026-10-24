@@ -28,4 +28,4 @@ spec:
         - name: mediapulse-api-service
           port: 80
   tls:
-    secretName: mediapulse-local-tls
+    secretName: mediapulse-izanar-dev-tls

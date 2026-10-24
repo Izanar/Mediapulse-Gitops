@@ -15,7 +15,7 @@ spec:
           scheme: https
           serversTransport: k8s-dashboard-transport
   tls:
-    secretName: k8s-local-tls
+    secretName: kind-izanar-dev-tls
 ---
 apiVersion: traefik.io/v1alpha1
 kind: ServersTransport

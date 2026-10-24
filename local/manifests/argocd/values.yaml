@@ -11,7 +11,7 @@ server:
 
 configs:
   cm:
-    url: https://argocd.local
+    url: https://argocd.izanar.dev
   params:
     server.insecure: true
   rbac:
@@ -32,10 +32,10 @@ extraObjects:
     spec:
       tls:
         - hosts:
-            - argocd.local
-          secretName: argocd-local-tls
+            - argocd.izanar.dev
+          secretName: argocd-izanar-dev-tls
       rules:
-        - host: argocd.local
+        - host: argocd.izanar.dev
           http:
             paths:
               - path: /

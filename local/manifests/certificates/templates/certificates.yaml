@@ -1,17 +1,17 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: argocd-local-tls
+  name: argocd-izanar-dev-tls
   namespace: argocd
 spec:
-  secretName: argocd-local-tls
+  secretName: argocd-izanar-dev-tls
   duration: 2160h
   renewBefore: 360h
   issuerRef:
     name: mediapulse-local-ca
     kind: ClusterIssuer
   dnsNames:
-    - argocd.local
+    - argocd.izanar.dev
   usages:
     - digital signature
     - key encipherment
@@ -20,17 +20,17 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: mediapulse-local-tls
+  name: mediapulse-izanar-dev-tls
   namespace: default
 spec:
-  secretName: mediapulse-local-tls
+  secretName: mediapulse-izanar-dev-tls
   duration: 2160h
   renewBefore: 360h
   issuerRef:
     name: mediapulse-local-ca
     kind: ClusterIssuer
   dnsNames:
-    - mediapulse.local
+    - mediapulse.izanar.dev
   usages:
     - digital signature
     - key encipherment
@@ -39,17 +39,17 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: traefik-local-tls
+  name: traefik-izanar-dev-tls
   namespace: traefik
 spec:
-  secretName: traefik-local-tls
+  secretName: traefik-izanar-dev-tls
   duration: 2160h
   renewBefore: 360h
   issuerRef:
     name: mediapulse-local-ca
     kind: ClusterIssuer
   dnsNames:
-    - traefik.local
+    - traefik.izanar.dev
   usages:
     - digital signature
     - key encipherment
@@ -58,17 +58,17 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: k8s-local-tls
+  name: kind-izanar-dev-tls
   namespace: kubernetes-dashboard
 spec:
-  secretName: k8s-local-tls
+  secretName: kind-izanar-dev-tls
   duration: 2160h
   renewBefore: 360h
   issuerRef:
     name: mediapulse-local-ca
     kind: ClusterIssuer
   dnsNames:
-    - k8s.local
+    - kind.izanar.dev
   usages:
     - digital signature
     - key encipherment

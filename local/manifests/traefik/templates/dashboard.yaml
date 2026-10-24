@@ -12,4 +12,4 @@ spec:
         - name: api@internal
           kind: TraefikService
   tls:
-    secretName: traefik-local-tls
+    secretName: traefik-izanar-dev-tls

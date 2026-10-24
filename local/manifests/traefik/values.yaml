@@ -11,8 +11,8 @@ ports:
 # Внешний IP через MetalLB (пул traefik-pool из manifests/metallb)
 loadBalancerIP: 172.18.255.10
 
-# Домен дашборда из docs/traefik.md — https://traefik.local/dashboard/
-host: traefik.local
+# Домен дашборда через Cloudflare Tunnel — https://traefik.izanar.dev/dashboard/
+host: traefik.izanar.dev
 
 # Внешние порты сервиса (exposedPort официального чарта): web 80, websecure 443
 servicePorts:

@@ -4,7 +4,7 @@ api:
   replicas: 3
   port: 8000
 
-host: mediapulse.local
+host: mediapulse.izanar.dev
 
 worker:
   image: ghcr.io/izanar/mediapulse-app/worker
