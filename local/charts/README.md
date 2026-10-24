@@ -6,7 +6,7 @@
 - `databases/` — PostgreSQL + Redis
 - `secrets/` — Kubernetes Secret из Vault через External Secrets Operator
 
-Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами. Kubernetes Dashboard доступен по `kind.izanar.dev` через Traefik и Cloudflare Tunnel; перед публикацией hostname должен быть защищён Cloudflare Access, а сам Dashboard дополнительно требует токен `admin-user`. Чарт Dashboard также создаёт требуемые им секреты `certs`, `csrf` и `key-holder`.
+Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами. Kubernetes Dashboard доступен по `kind.izanar.dev` через Traefik и Cloudflare Tunnel; hostname защищён Cloudflare Access, а сам Dashboard дополнительно требует токен `admin-user`. Dashboard автоматически создаёт временный self-signed сертификат для внутреннего HTTPS между ним и Traefik; для этого не требуется CA или Kubernetes Secret. Чарт создаёт необходимые ему секреты `csrf` и `key-holder`.
 
 Локальной обёртки-чарта для Argo CD больше нет. Он ставится напрямую из официального Helm-репозитория; в нашем git лежит файл values (`local/manifests/argocd/values.yaml` — переопределения и стандартный Kubernetes Ingress через `extraObjects`). Ingress не зависит от Traefik CRD, которые устанавливаются позже, использует HTTP внутри кластера; публичный URL Argo CD `https://argocd.izanar.dev` защищён Cloudflare Access и HTTPS завершается на Cloudflare.
 
