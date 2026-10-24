@@ -4,6 +4,7 @@
 
 - `backend/` — API и Worker Mediapulse
 - `databases/` — PostgreSQL + Redis
+- `secrets/` — Kubernetes Secret из Vault через External Secrets Operator
 
 Инфраструктурные чарты лежат в `local/manifests/` рядом со скачанными манифестами (сейчас: `kubernetes-dashboard/` — веб-UI кластера, `k8s.local` через Traefik, вход по токену `admin-user`). Чарт Dashboard также создаёт требуемые им секреты `certs`, `csrf` и `key-holder`.
 
@@ -42,14 +43,15 @@ git add -A && git commit -m "chart(<имя>): ..." && git push
 Helm берёт значения `.Values.*` из `values.yaml` чарта и из переопределений,
 переданных при установке. В базе имя пользователя, пароль и имя БД не задаются
 в `values.yaml`: Deployment получает их из Kubernetes Secret
-`mediapulse-backend-secrets`, который создаёт External Secrets Operator из Vault.
-Для локального кластера заполните Vault из `Mediapulse-App/.env` скриптом
-`Mediapulse-Infra/local/init-local-secrets.sh`. Пока Secret не создан, pod
-PostgreSQL не запустится; после появления Secret Kubernetes повторит запуск.
+`mediapulse-backend-secrets`, который создаёт отдельный чарт `secrets/` через
+External Secrets Operator из Vault. Для локального кластера сначала заполните
+Vault из `Mediapulse-App/.env` скриптом
+`Mediapulse-Infra/local/init-local-secrets.sh`, затем дождитесь готовности
+ExternalSecret и только после этого запускайте базу данных.
 
 ## CI: версионирование чартов (`.github/workflows/charts.yml`)
 
-Версионируются **только чарты приложения** в `local/charts/*` (backend, databases).
+Версионируются **только чарты приложения** в `local/charts/*` (backend, databases, secrets).
 Инфра в `local/manifests/*` и чужие upstream-чарты здесь не трогаем.
 
 | Триггер | Что делает CI |
@@ -64,7 +66,7 @@ workflow логинится в `ghcr.io` штатным `GITHUB_TOKEN` (`package
 и вычисляет тег `sha-<7 символов>`. Условие: репозиторию Mediapulse-Gitops открыт
 Actions-доступ к пакетам `api`/`worker` (страница пакета → Package settings →
 Manage Actions access → Add repository) либо пакеты публичные.
-Чарт `databases` от образов приложения не зависит — его версия растёт только при правке его самого (образы postgres/redis пиним вручную).
+Чарты `databases` и `secrets` от образов приложения не зависят — их версии растут только при правке самих чартов (образы postgres/redis пиним вручную).
 
 Ручной запуск: Actions → «Charts» → Run workflow (бампнет изменённые чарты).
 
