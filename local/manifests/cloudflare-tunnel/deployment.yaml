@@ -23,6 +23,8 @@ spec:
             - tunnel
             - --no-autoupdate
             - run
+            - --config
+            - /etc/cloudflare/config.yaml
             - --token-file
             - /run/secrets/cloudflare/tunnel-token
           securityContext:
@@ -45,6 +47,10 @@ spec:
             - name: tunnel-token
               mountPath: /run/secrets/cloudflare
               readOnly: true
+            - name: config
+              mountPath: /etc/cloudflare/config.yaml
+              subPath: config.yaml
+              readOnly: true
       volumes:
         - name: tunnel-token
           secret:
@@ -53,3 +59,7 @@ spec:
             items:
               - key: tunnel-token
                 path: tunnel-token
+        - name: config
+          configMap:
+            name: cloudflare-tunnel-config
+            defaultMode: 0444

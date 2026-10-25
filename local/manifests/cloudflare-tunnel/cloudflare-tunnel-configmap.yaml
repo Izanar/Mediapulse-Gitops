@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-tunnel-config
+  namespace: default
+data:
+  config.yaml: |
+    ingress:
+      - hostname: mediapulse.izanar.dev
+        service: http://traefik.traefik.svc.cluster.local:80
+      - service: http_status:404
