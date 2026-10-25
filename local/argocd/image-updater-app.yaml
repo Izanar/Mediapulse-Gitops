@@ -6,15 +6,15 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://argoproj-labs.github.io/argocd-image-updater/'
+    repoURL: 'https://argoproj.github.io/argo-helm'
     targetRevision: 0.12.1
     chart: argocd-image-updater
     helm:
       values: |
         replicaCount: 1
         image:
-          repository: ghcr.io/argoprojlabs/argocd-image-updater
-          tag: 0.12.1
+          repository: quay.io/argoprojlabs/argocd-image-updater
+          tag: ""
         config:
           registry: |
             ghcr.io:
