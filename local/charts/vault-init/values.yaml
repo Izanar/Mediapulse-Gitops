@@ -1,0 +1,19 @@
+# Image for the vault-init Job
+image:
+  repository: hashicorp/vault
+  tag: 1.15.2
+  pullPolicy: IfNotPresent
+
+# Vault connection details
+vault:
+  address: http://vault.vault.svc.cluster.local:8200
+  namespace: vault
+
+# Names of Kubernetes secrets created by the Job
+bootstrapSecretName: vault-bootstrap
+approleSecretName: vault-approle
+envSecretName: vault-init-env
+
+# RBAC for the Job service account
+rbac:
+  create: true

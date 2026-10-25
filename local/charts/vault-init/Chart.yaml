@@ -1,0 +1,6 @@
+apiVersion: v2
+name: vault-init
+description: One-time Job to initialise HashiCorp Vault, write secrets from .env and bootstrap AppRole for External Secrets Operator
+type: application
+version: 0.1.0
+appVersion: "1.15.2"

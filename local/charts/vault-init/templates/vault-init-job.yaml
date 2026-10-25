@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-init
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: vault-init
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: vault-init
+      containers:
+        - name: vault-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          env:
+            - name: VAULT_ADDR
+              value: "{{ .Values.vault.address }}"
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: BOOTSTRAP_SECRET_NAME
+              value: "{{ .Values.bootstrapSecretName }}"
+            - name: APPROLE_SECRET_NAME
+              value: "{{ .Values.approleSecretName }}"
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.envSecretName }}"
+                optional: true
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              apk add --no-cache curl python3 >/dev/null 2>&1 || true
+              sh /scripts/vault-init.sh
+      volumes:
+        - name: script
+          configMap:
+            name: vault-init-script

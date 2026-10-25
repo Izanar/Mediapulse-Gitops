@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-init-script
+  namespace: "{{ .Release.Namespace }}"
+data:
+  vault-init.sh: |
+    #!/bin/sh
+    set -eu
+
+    export VAULT_ADDR="${VAULT_ADDR:-http://vault.vault.svc.cluster.local:8200}"
+    K8S_API="https://kubernetes.default.svc"
+    SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+    SA_CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    NAMESPACE="${POD_NAMESPACE:-default}"
+    BOOTSTRAP_SECRET="${BOOTSTRAP_SECRET_NAME:-vault-bootstrap}"
+    APPROLE_SECRET="${APPROLE_SECRET_NAME:-vault-approle}"
+
+    log() { echo "[vault-init] $*"; }
+
+    k8s_secret_exists() {
+      local name="$1"
+      curl -sf -o /dev/null \
+        -H "Authorization: Bearer $SA_TOKEN" \
+        --cacert "$SA_CA" \
+        "$K8S_API/api/v1/namespaces/$NAMESPACE/secrets/$name" >/dev/null 2>&1
+    }
+
+    k8s_apply_secret() {
+      local name="$1" json="$2"
+      if k8s_secret_exists "$name"; then
+        log "Updating Secret $name"
+        curl -sf -X PUT "$K8S_API/api/v1/namespaces/$NAMESPACE/secrets/$name" \
+          -H "Authorization: Bearer $SA_TOKEN" \
+          -H "Content-Type: application/json" \
+          --cacert "$SA_CA" \
+          -d "$json" >/dev/null
+      else
+        log "Creating Secret $name"
+        curl -sf -X POST "$K8S_API/api/v1/namespaces/$NAMESPACE/secrets" \
+          -H "Authorization: Bearer $SA_TOKEN" \
+          -H "Content-Type: application/json" \
+          --cacert "$SA_CA" \
+          -d "$json" >/dev/null
+      fi
+    }
+
+    log "Waiting for Vault API at $VAULT_ADDR..."
+    for i in $(seq 1 60); do
+      if curl -sf "$VAULT_ADDR/v1/sys/seal-status" >/dev/null 2>&1; then
+        log "Vault API reachable"
+        break
+      fi
+      sleep 2
+    done
+
+    STATUS=$(curl -sf "$VAULT_ADDR/v1/sys/seal-status")
+    INITIALIZED=$(echo "$STATUS" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("initialized", False))' 2>/dev/null || echo "False")
+    SEALED=$(echo "$STATUS" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("sealed", True))' 2>/dev/null || echo "True")
+
+    ROOT_TOKEN=""
+
+    if [ "$INITIALIZED" != "True" ]; then
+      log "Initializing Vault..."
+      INIT_RESP=$(curl -sf -X POST "$VAULT_ADDR/v1/sys/init" -d '{"secret_shares":1,"secret_threshold":1}')
+      ROOT_TOKEN=$(echo "$INIT_RESP" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("root_token",""))')
+      UNSEAL_KEY=$(echo "$INIT_RESP" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("keys",[""])[0])')
+
+      JSON=$(printf '{"apiVersion":"v1","kind":"Secret","metadata":{"name":"%s","namespace":"%s"},"type":"Opaque","stringData":{"root-token":"%s","unseal-key":"%s"}}' "$BOOTSTRAP_SECRET" "$NAMESPACE" "$ROOT_TOKEN" "$UNSEAL_KEY")
+      k8s_apply_secret "$BOOTSTRAP_SECRET" "$JSON"
+
+      curl -sf -X POST "$VAULT_ADDR/v1/sys/unseal" -d "{\"key\":\"$UNSEAL_KEY\"}" >/dev/null
+      log "Vault initialised and unsealed"
+    else
+      log "Vault already initialised"
+      if [ "$SEALED" = "True" ]; then
+        UNSEAL_KEY=$(curl -sf -H "Authorization: Bearer $SA_TOKEN" --cacert "$SA_CA" "$K8S_API/api/v1/namespaces/$NAMESPACE/secrets/$BOOTSTRAP_SECRET" | python3 -c 'import json,sys,base64; s=json.load(sys.stdin); print(base64.b64decode(s["data"]["unseal-key"]).decode())')
+        curl -sf -X POST "$VAULT_ADDR/v1/sys/unseal" -d "{\"key\":\"$UNSEAL_KEY\"}" >/dev/null
+        log "Vault unsealed"
+      fi
+      ROOT_TOKEN=$(curl -sf -H "Authorization: Bearer $SA_TOKEN" --cacert "$SA_CA" "$K8S_API/api/v1/namespaces/$NAMESPACE/secrets/$BOOTSTRAP_SECRET" | python3 -c 'import json,sys,base64; s=json.load(sys.stdin); print(base64.b64decode(s["data"]["root-token"]).decode())')
+    fi
+
+    export VAULT_TOKEN="$ROOT_TOKEN"
+
+    if ! vault secrets list -format=json 2>/dev/null | python3 -c 'import json,sys; sys.exit(0 if "secret/" in json.load(sys.stdin) else 1)' 2>/dev/null; then
+      log "Enabling KV v2 at secret/"
+      vault secrets enable -path=secret kv-v2 >/dev/null
+    fi
+
+    if ! vault auth list -format=json 2>/dev/null | python3 -c 'import json,sys; sys.exit(0 if "approle/" in json.load(sys.stdin) else 1)' 2>/dev/null; then
+      log "Enabling AppRole auth"
+      vault auth enable approle >/dev/null
+    fi
+
+    printf 'path "secret/data/mediapulse" { capabilities = ["read"] }\npath "auth/token/lookup-self" { capabilities = ["read"] }\n' | vault policy write mediapulse-eso - >/dev/null
+
+    printf 'path "secret/data/mediapulse" { capabilities = ["create", "update"] }\n' | vault policy write mediapulse-provisioner - >/dev/null
+
+    vault write auth/approle/role/mediapulse-eso \
+      token_policies=mediapulse-eso \
+      token_no_default_policy=true \
+      token_ttl=1h token_max_ttl=1h secret_id_ttl=0 >/dev/null
+
+    vault write auth/approle/role/mediapulse-provisioner \
+      token_policies=mediapulse-provisioner \
+      token_no_default_policy=true \
+      token_ttl=1h token_max_ttl=1h secret_id_ttl=0 >/dev/null
+
+    PROV_ROLE_ID=$(vault read -field=role_id auth/approle/role/mediapulse-provisioner/role-id)
+    PROV_SECRET_ID=$(vault write -field=secret_id -f auth/approle/role/mediapulse-provisioner/secret-id)
+    ESO_ROLE_ID=$(vault read -field=role_id auth/approle/role/mediapulse-eso/role-id)
+    ESO_SECRET_ID=$(vault write -field=secret_id -f auth/approle/role/mediapulse-eso/secret-id)
+
+    JSON=$(printf '{"apiVersion":"v1","kind":"Secret","metadata":{"name":"%s","namespace":"%s"},"type":"Opaque","stringData":{"role-id":"%s","secret-id":"%s"}}' "$APPROLE_SECRET" "$NAMESPACE" "$ESO_ROLE_ID" "$ESO_SECRET_ID")
+    k8s_apply_secret "$APPROLE_SECRET" "$JSON"
+
+    log "Writing secrets from .env into Vault..."
+
+    python3 -c 'import json,os,sys; keys=["POSTGRES_SERVER","POSTGRES_PORT","POSTGRES_USER","POSTGRES_PASSWORD","POSTGRES_DB","REDIS_HOST","REDIS_PORT","SECRET_KEY","S3_ENDPOINT_URL","S3_ACCESS_KEY","S3_SECRET_KEY","S3_BUCKET_NAME","CLOUDFLARE_TUNNEL_TOKEN"]; data={"data":{k.lower():os.environ[k] for k in keys if k in os.environ and os.environ[k]}}; json.dump(data,sys.stdout)' | VAULT_TOKEN="$VAULT_TOKEN" vault write secret/data/mediapulse @-
+
+    log "✅ Vault initialisation complete"
