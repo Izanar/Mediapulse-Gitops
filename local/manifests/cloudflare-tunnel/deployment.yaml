@@ -22,9 +22,9 @@ spec:
           args:
             - tunnel
             - --no-autoupdate
-            - run
             - --config
             - /etc/cloudflare/config.yaml
+            - run
             - --token-file
             - /run/secrets/cloudflare/tunnel-token
           securityContext:
