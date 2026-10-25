@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://argoproj-labs.github.io/argocd-image-updater/'
+    targetRevision: 0.12.1
+    chart: argocd-image-updater
+    helm:
+      values: |
+        replicaCount: 1
+        image:
+          repository: ghcr.io/argoprojlabs/argocd-image-updater
+          tag: 0.12.1
+        config:
+          registry: |
+            ghcr.io:
+              # Image Updater читает credentials из ArgoCD репозитория (repoURL уже авторизован)
+              # Для приватных репозиториев добавьте secret:
+              # username: ${{ secrets.CR_USER }}
+              # password: ${{ secrets.CR_PWD }}
+        argocd:
+          server: https://argocd.izanar.dev
+          # Plain HTTP для локального Kind; в проде используйте HTTPS + токен
+          plaintext: true
+          # Image Updater использует ArgoCD API для чтения Application и записи в Git
+          # Credentials берутся из ArgoCD repo-creds (доступ к Izanar/Mediapulse-GitOps)
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true

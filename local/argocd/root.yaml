@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: root-app
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-options: Prune=false
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
