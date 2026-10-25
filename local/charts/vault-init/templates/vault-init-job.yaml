@@ -4,7 +4,6 @@ metadata:
   name: vault-init
   namespace: "{{ .Release.Namespace }}"
 spec:
-  ttlSecondsAfterFinished: 600
   backoffLimit: 3
   template:
     metadata:
