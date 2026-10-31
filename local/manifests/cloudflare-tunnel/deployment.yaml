@@ -18,7 +18,8 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:2026.10.3
+          image: cloudflare/cloudflared:latest
+          imagePullPolicy: Always
           args:
             - tunnel
             - --no-autoupdate
