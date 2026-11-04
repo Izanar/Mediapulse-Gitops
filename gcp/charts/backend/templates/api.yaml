@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediapulse-api
+  annotations:
+    argocd-image-updater.argoproj.io/image: backend=ghcr.io/izanar/mediapulse-app/api
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+    argocd-image-updater.argoproj.io/commit-message: "chore: update {{.AppName}} image to {{.NewImage}}:{{.NewTag}}"
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: mediapulse-api
+  template:
+    metadata:
+      labels:
+        app: mediapulse-api
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: ghcr-secret
+      initContainers:
+        - name: db-migration
+          image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            - secretRef:
+                name: mediapulse-backend-secrets
+      containers:
+        - name: api
+          image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.api.port }}
+          envFrom:
+            - secretRef:
+                name: mediapulse-backend-secrets
+          env:
+            - name: WATCHFILES_FORCE_POLLING
+              value: "true" # Отключает агрессивный fsnotify, заменяя на безопасный опрос (polling)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediapulse-api-service
+spec:
+  ports:
+    - port: 80
+      targetPort: {{ .Values.api.port }}
+  selector:
+    app: mediapulse-api

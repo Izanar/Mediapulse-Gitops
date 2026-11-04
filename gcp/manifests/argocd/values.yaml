@@ -1,0 +1,33 @@
+# Настройки самого сервера ArgoCD
+server:
+  # Отключаем встроенный Ingress от чарта, так как мы используем Traefik IngressRoute
+  ingress:
+    enabled: false
+
+configs:
+  cm:
+    # Указываем публичный URL, по которому будет доступен ArgoCD в GCP
+    url: https://argocd.izanar.dev
+  params:
+    # Включаем небезопасный режим внутри кластера (так как TLS завершается на Traefik)
+    server.insecure: true
+  rbac:
+    policy: |
+      g, admins, role:admin
+
+# Создаем IngressRoute для Traefik, чтобы открыть доступ к argocd.izanar.dev
+extraObjects:
+  - apiVersion: traefik.io/v1alpha1
+    kind: IngressRoute
+    metadata:
+      name: argocd-server-ingressroute
+      namespace: argocd
+    spec:
+      entryPoints:
+        - websecure
+      routes:
+        - match: Host(`argocd.izanar.dev`)
+          kind: Rule
+          services:
+            - name: argocd-server
+              port: 80

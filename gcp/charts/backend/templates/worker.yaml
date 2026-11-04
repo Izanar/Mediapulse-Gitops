@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediapulse-worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app: mediapulse-worker
+  template:
+    metadata:
+      labels:
+        app: mediapulse-worker
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: worker
+          image: "{{ .Values.worker.image }}:{{ .Values.worker.tag }}"
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: mediapulse-backend-secrets

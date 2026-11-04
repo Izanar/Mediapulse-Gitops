@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mediapulse-backend
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Запустится после ArgoCD/инфраструктуры
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/Izanar/Mediapulse-Gitops.git'
+    targetRevision: HEAD
+    path: gcp/charts/backend  # Указываем путь именно к нашему чарту бэкенда
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default        # Бэкенд деплоим в дефолтный namespace (или production)
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
